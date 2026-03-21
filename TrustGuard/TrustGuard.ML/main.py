@@ -1,17 +1,26 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+import random
 
 app = FastAPI()
 
 class NewsRequest(BaseModel):
-    text: str
+    content: str
+    content_type: str 
 
-@app.post("/analyze")
+@app.post("/api/analyze")
 def analyze_news(request: NewsRequest):
-    text_lower = request.text.lower()
-    is_fake = "fraud" in text_lower or "fake" in text_lower
+    print(f"Отримано запит типу: {request.content_type}")
+    print(f"Текст для перевірки: {request.content[:50]}...")
+
+    verdicts = ["Real", "Fake", "Uncertain"]
+
+    chosen_verdict = random.choices(verdicts, weights=[45, 45, 10], k=1)[0] 
+    
+    confidence = round(random.uniform(0.60, 0.99), 2)
     
     return {
-        "status": "fake" if is_fake else "real",
-        "confidence": 92.5 if is_fake else 88.0
+        "verdict": chosen_verdict,
+        "confidenceScore": confidence,
+        "message": "Аналіз успішно завершено (Mock)"
     }
