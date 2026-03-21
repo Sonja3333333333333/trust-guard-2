@@ -4,3 +4,5 @@ obj/
 *.user
 TrustGuard/TrustGuard.ML/venv/
 /TrustGuard/TrustGuard.ML/__pycache__
+TrustGuard.Web/appsettings.json
+TrustGuard.Web/appsettings.Development.json

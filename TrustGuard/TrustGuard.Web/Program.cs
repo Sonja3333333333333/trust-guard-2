@@ -1,6 +1,24 @@
+using Microsoft.EntityFrameworkCore;
+using TrustGuard.Domain.Entities;
+using TrustGuard.Infrastructure.Persistence;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(connectionString,
+        b => b.MigrationsAssembly("TrustGuard.Web"))); // Міграції будуть жити у веб-проєкті
+
+builder.Services.AddDefaultIdentity<ApplicationUser>(options => {
+    options.Password.RequireDigit = false;
+    options.Password.RequiredLength = 6;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = false;
+    options.SignIn.RequireConfirmedAccount = false;
+})
+.AddEntityFrameworkStores<ApplicationDbContext>();
+
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
