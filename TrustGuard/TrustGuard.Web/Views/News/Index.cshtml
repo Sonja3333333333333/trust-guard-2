@@ -1,8 +1,58 @@
 ﻿@{
-    ViewData["Title"] = "Перевірка новини";
+    ViewData["Title"] = "News Check";
 }
 
-<div class="text-center mt-5">
-    <h1>Перевірити новину на фейк</h1>
-    <p class="lead">Тут скоро буде форма для введення тексту, посилання або завантаження фото.</p>
+<div class="row mt-4">
+    <div class="col-lg-8">
+        
+        <ul class="nav nav-tabs" id="checkTypeTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active text-dark" id="text-tab" data-bs-toggle="tab" data-bs-target="#text-pane" type="button" role="tab">Текст</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link text-dark" id="url-tab" data-bs-toggle="tab" data-bs-target="#url-pane" type="button" role="tab">URL</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link text-dark" id="doc-tab" data-bs-toggle="tab" data-bs-target="#doc-pane" type="button" role="tab">Документ</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link text-dark" id="image-tab" data-bs-toggle="tab" data-bs-target="#image-pane" type="button" role="tab">Зображення</button>
+            </li>
+        </ul>
+
+        <div class="tab-content border border-top-0 p-0 mb-4 bg-white" id="myTabContent">
+            
+            <div class="tab-pane fade show active" id="text-pane" role="tabpanel">
+                <textarea class="form-control border-0 p-3 shadow-none" rows="12" placeholder="Вставте текст новини..."></textarea>
+            </div>
+            
+            <div class="tab-pane fade p-4" id="url-pane" role="tabpanel" style="min-height: 300px;">
+                <label class="form-label text-muted">Вставте посилання на статтю:</label>
+                <input type="url" class="form-control form-control-lg" placeholder="https://..." />
+            </div>
+            
+            <div class="tab-pane fade p-4" id="doc-pane" role="tabpanel" style="min-height: 300px;">
+                <label class="form-label text-muted">Завантажте текстовий файл (.txt, .pdf, .docx):</label>
+                <input type="file" class="form-control form-control-lg" accept=".txt,.pdf,.docx" />
+            </div>
+            
+            <div class="tab-pane fade p-4" id="image-pane" role="tabpanel" style="min-height: 300px;">
+                <label class="form-label text-muted">Завантажте фото для перевірки на маніпуляції:</label>
+                <input type="file" class="form-control form-control-lg" accept="image/*" />
+            </div>
+
+        </div>
+
+        <button class="btn btn-outline-primary px-5 py-2 fw-bold" style="border-radius: 8px;">
+            Аналізувати
+        </button>
+
+    </div>
+
+    <div class="col-lg-4 mt-4 mt-lg-0">
+        <div class="border d-flex flex-column align-items-center justify-content-center bg-white h-100" style="min-height: 400px;">
+            <i class="bi bi-box-seam text-muted mb-3" style="font-size: 4rem;"></i>
+            <h5 class="text-muted fw-light">Ready to start?</h5>
+        </div>
+    </div>
 </div>
