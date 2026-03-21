@@ -2,3 +2,5 @@
 bin/
 obj/
 *.user
+TrustGuard/TrustGuard.ML/venv/
+/TrustGuard/TrustGuard.ML/__pycache__
