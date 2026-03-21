@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="TrustGuard.Application/TrustGuard.Application.csproj" />
+  <Project Path="TrustGuard.Domain/TrustGuard.Domain.csproj" />
+  <Project Path="TrustGuard.Infrastructure/TrustGuard.Infrastructure.csproj" />
+  <Project Path="TrustGuard.Web/TrustGuard.Web.csproj" />
+</Solution>
