@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using TrustGuard.Application.Interfaces;
 using TrustGuard.Domain.Entities;
 using TrustGuard.Infrastructure.Persistence;
+using TrustGuard.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,7 +10,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString,
-        b => b.MigrationsAssembly("TrustGuard.Web"))); // Міграції будуть жити у веб-проєкті
+        b => b.MigrationsAssembly("TrustGuard.Web"))); 
 
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => {
     options.Password.RequireDigit = false;
@@ -20,6 +22,9 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => {
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddHttpClient<IMlService, FastApiMlService>();
+
 
 var app = builder.Build();
 
@@ -42,6 +47,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
-
 
 app.Run();
