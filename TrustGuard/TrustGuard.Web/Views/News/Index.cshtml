@@ -5,27 +5,50 @@
 <div class="row mt-4">
     <div class="col-lg-8">
         
-        <form asp-controller="News" asp-action="Analyze" method="post">
-            
+        <form asp-controller="News" asp-action="Analyze" method="post" enctype="multipart/form-data">
+    
             <ul class="nav nav-tabs" id="checkTypeTabs" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active text-dark" id="text-tab" data-bs-toggle="tab" data-bs-target="#text-pane" type="button" role="tab">Текст</button>
                 </li>
-                <li class="nav-item"><button class="nav-link text-dark" type="button">URL</button></li>
-                <li class="nav-item"><button class="nav-link text-dark" type="button">Документ</button></li>
-                <li class="nav-item"><button class="nav-link text-dark" type="button">Зображення</button></li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link text-dark" id="url-tab" data-bs-toggle="tab" data-bs-target="#url-pane" type="button" role="tab">URL</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link text-dark" id="doc-tab" data-bs-toggle="tab" data-bs-target="#doc-pane" type="button" role="tab">Документ</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link text-dark" id="image-tab" data-bs-toggle="tab" data-bs-target="#image-pane" type="button" role="tab">Зображення</button>
+                </li>
             </ul>
 
             <div class="tab-content border border-top-0 p-0 mb-4 bg-white" id="myTabContent">
+        
                 <div class="tab-pane fade show active" id="text-pane" role="tabpanel">
                     <textarea name="textContent" class="form-control border-0 p-3 shadow-none" rows="12" placeholder="Вставте текст новини..."></textarea>
                 </div>
+        
+                <div class="tab-pane fade p-4" id="url-pane" role="tabpanel" style="min-height: 300px;">
+                    <label class="form-label text-muted">Вставте посилання на статтю:</label>
+                    <input type="url" name="urlContent" class="form-control form-control-lg" placeholder="https://..." />
+                </div>
+        
+                <div class="tab-pane fade p-4" id="doc-pane" role="tabpanel" style="min-height: 300px;">
+                    <label class="form-label text-muted">Завантажте текстовий файл (.txt, .pdf, .docx):</label>
+                    <input type="file" name="documentFile" class="form-control form-control-lg" accept=".txt,.pdf,.docx" />
+                </div>
+        
+                <div class="tab-pane fade p-4" id="image-pane" role="tabpanel" style="min-height: 300px;">
+                    <label class="form-label text-muted">Завантажте фото для перевірки на маніпуляції:</label>
+                    <input type="file" name="imageFile" class="form-control form-control-lg" accept="image/*" />
+                </div>
+
             </div>
 
             <button type="submit" class="btn btn-outline-primary px-5 py-2 fw-bold" style="border-radius: 8px;">
                 Аналізувати
             </button>
-            
+    
         </form>
 
     </div>
