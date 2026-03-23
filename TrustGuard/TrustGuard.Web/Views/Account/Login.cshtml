@@ -1,0 +1,64 @@
+﻿@model TrustGuard.Web.Models.LoginViewModel
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow border-0">
+                <div class="card-header bg-dark text-white text-center">
+                    <h4 class="mb-0">Вхід в систему</h4>
+                </div>
+                <div class="card-body p-4">
+                    
+                    @* --- БЛОК ДЛЯ ВИВОДУ ПОВІДОМЛЕНЬ (TempData) --- *@
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success text-center small" role="alert">
+                            @TempData["SuccessMessage"]
+                        </div>
+                    }
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger text-center small" role="alert">
+                            @TempData["ErrorMessage"]
+                        </div>
+                    }
+                    @* --------------------------------------------- *@
+
+                    <form asp-action="Login" method="post">
+                        @* Тут будуть виводитися помилки типу "Невірна пошта/пароль" або "Підтвердіть пошту" *@
+                        <div asp-validation-summary="ModelOnly" class="text-danger small mb-3 fw-bold"></div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input asp-for="Email" class="form-control" placeholder="user@example.com" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Пароль</label>
+                            <input asp-for="Password" class="form-control" />
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input asp-for="RememberMe" class="form-check-input" />
+                            <label asp-for="RememberMe" class="form-check-label">Запам'ятати мене</label>
+                        </div>
+
+                        <button type="submit" class="btn btn-dark w-100 mb-3">Увійти</button>
+
+                        <div class="text-center">
+                            <span class="small text-muted">Ще немає акаунту?</span>
+                            <a asp-action="Register" class="text-decoration-none small fw-bold">Зареєструватися</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @* Підключаємо стандартну перевірку на стороні клієнта (щоб не пускало без вводу пошти) *@
+    <partial name="_ValidationScriptsPartial" />
+}

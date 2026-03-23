@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TrustGuard.Application.Interfaces;
 using TrustGuard.Domain.Entities;
@@ -6,44 +7,48 @@ using TrustGuard.Infrastructure.Repositories;
 using TrustGuard.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString,
-        b => b.MigrationsAssembly("TrustGuard.Web"))); 
+        b => b.MigrationsAssembly("TrustGuard.Web")));
 
-builder.Services.AddDefaultIdentity<ApplicationUser>(options => {
+// Налаштування Identity
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options => {
     options.Password.RequireDigit = false;
     options.Password.RequiredLength = 6;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireUppercase = false;
-    options.SignIn.RequireConfirmedAccount = false;
+
+    // ВМИКАЄМО обов'язкове підтвердження пошти для логіну
+    options.SignIn.RequireConfirmedAccount = true;
 })
-.AddEntityFrameworkStores<ApplicationDbContext>();
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders();
 
 builder.Services.AddControllersWithViews();
 
+// Реєстрація твоїх сервісів
 builder.Services.AddHttpClient<IMlService, FastApiMlService>();
-
 builder.Services.AddScoped<INewsCheckRepository, NewsCheckRepository>();
-
 builder.Services.AddScoped<INewsCheckService, NewsCheckService>();
 
+// ДОДАНО: Реєстрація нашого сервісу для відправки пошти (простий варіант)
+builder.Services.AddScoped<IEmailSender, EmailService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 app.UseRouting();
 
+// ОБОВ'ЯЗКОВО: спочатку Authentication, потім Authorization
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();

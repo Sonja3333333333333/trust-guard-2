@@ -1,0 +1,63 @@
+﻿@model TrustGuard.Web.Models.RegisterViewModel
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow border-0">
+                <div class="card-header bg-dark text-white text-center">
+                    <h4 class="mb-0">Створення акаунту</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Register" method="post" id="regForm">
+                        @* Сюди прилетять помилки з сервера, якщо пароль все одно не підійде *@
+                        <div asp-validation-summary="All" class="text-danger small"></div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Повне ім'я</label>
+                            <input asp-for="FullName" class="form-control" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input asp-for="Email" id="emailField" class="form-control" placeholder="user@example.com" />
+                            <small id="emailError" class="text-danger"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Пароль</label>
+                            <input asp-for="Password" type="password" class="form-control" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Підтвердіть пароль</label>
+                            <input asp-for="ConfirmPassword" type="password" class="form-control" />
+                        </div>
+
+                        <button type="submit" id="submitBtn" class="btn btn-dark w-100">Зареєструватися</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+        // Тільки перевірка пошти
+        $('#emailField').on('input', function () {
+        const email = $(this).val();
+        const regex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+
+        if (email.length > 0 && !regex.test(email)) {
+        $('#emailError').text('Формат пошти невірний');
+        $(this).addClass('is-invalid');
+        } else {
+        $('#emailError').text('');
+        $(this).removeClass('is-invalid');
+        }
+        });
+        });
+    </script>
+}
