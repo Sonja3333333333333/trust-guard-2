@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TrustGuard.Application.Interfaces;
 using TrustGuard.Domain.Entities;
 using TrustGuard.Infrastructure.Persistence;
+using TrustGuard.Infrastructure.Repositories;
 using TrustGuard.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,6 +25,10 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => {
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddHttpClient<IMlService, FastApiMlService>();
+
+builder.Services.AddScoped<INewsCheckRepository, NewsCheckRepository>();
+
+builder.Services.AddScoped<INewsCheckService, NewsCheckService>();
 
 
 var app = builder.Build();

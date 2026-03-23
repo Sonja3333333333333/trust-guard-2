@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using TrustGuard.Application.Interfaces;
 
 namespace TrustGuard.Web.Controllers
@@ -6,10 +7,12 @@ namespace TrustGuard.Web.Controllers
     public class NewsController : Controller
     {
         private readonly IMlService _mlService;
+        private readonly INewsCheckService _newsCheckService; 
 
-        public NewsController(IMlService mlService)
+        public NewsController(IMlService mlService, INewsCheckService newsCheckService)
         {
             _mlService = mlService;
+            _newsCheckService = newsCheckService;
         }
 
         [HttpGet]
@@ -33,6 +36,18 @@ namespace TrustGuard.Web.Controllers
             {
                 ViewBag.Verdict = result.Verdict;
                 ViewBag.Confidence = result.ConfidenceScore;
+
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    await _newsCheckService.SaveCheckResultAsync(userId, textContent, result.Verdict!, result.ConfidenceScore);
+                    ViewBag.Message = "Результат успішно збережено в історію!";
+                }
+                else
+                {
+                    ViewBag.Message = "Результат не збережено. Увійдіть у систему.";
+                }
             }
             else
             {
@@ -43,4 +58,3 @@ namespace TrustGuard.Web.Controllers
         }
     }
 }
-   

@@ -66,6 +66,11 @@
                 <i class="bi @iconClass @colorClass mb-3" style="font-size: 5rem;"></i>
                 <h2 class="@colorClass fw-bold text-uppercase">@ViewBag.Verdict</h2>
                 <h5 class="text-muted mt-2">Впевненість: @(Math.Round(ViewBag.Confidence * 100))%</h5>
+
+                @if (ViewBag.Message != null)
+                {
+                    <p class="text-muted small mt-4 text-center">@ViewBag.Message</p>
+                }
             }
             else if (ViewBag.Error != null)
             {
