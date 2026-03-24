@@ -25,6 +25,10 @@ namespace TrustGuard.Application.Interfaces
 
     public interface IMlService
     {
+        // Старий метод: для тексту та URL (відправляється як JSON)
         Task<MlAnalysisResponse?> AnalyzeContentAsync(string text, string contentType = "Text");
+
+        // НОВИЙ МЕТОД: для PDF, Word, Зображень (відправляється як файл)
+        Task<MlAnalysisResponse?> AnalyzeFileAsync(Stream fileStream, string fileName, string contentType);
     }
 }
