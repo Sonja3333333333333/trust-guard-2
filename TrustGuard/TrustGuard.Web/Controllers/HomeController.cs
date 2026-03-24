@@ -1,25 +1,62 @@
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
-using TrustGuard.Web.Models;
+using System.Security.Claims;
+using TrustGuard.Application.Interfaces;
+using TrustGuard.Application.Models;
 
 namespace TrustGuard.Web.Controllers
 {
     public class HomeController : Controller
     {
-        public IActionResult Index()
+        private readonly INewsCheckService _newsCheckService;
+
+        public HomeController(INewsCheckService newsCheckService)
         {
-            return View();
+            _newsCheckService = newsCheckService;
         }
 
-        public IActionResult Privacy()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return View(new DashboardStatsDto());
+            }
+
+            var stats = await _newsCheckService.GetDashboardStatsAsync(userId);
+
+            return View(stats);
         }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        [HttpGet]
+        public async Task<IActionResult> History()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return RedirectToAction("Index");
+            }
+
+            var fullHistory = await _newsCheckService.GetFullUserHistoryAsync(userId);
+
+            return View(fullHistory);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Details(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId)) return RedirectToAction("Index");
+
+            var details = await _newsCheckService.GetCheckDetailsAsync(id, userId);
+
+            if (details == null)
+            {
+                return RedirectToAction("Index");
+            }
+
+            return View(details);
         }
     }
 }

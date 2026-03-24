@@ -1,6 +1,7 @@
 ﻿using TrustGuard.Application.Interfaces;
 using TrustGuard.Domain.Entities;
 using TrustGuard.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace TrustGuard.Infrastructure.Repositories
 {
@@ -17,6 +18,19 @@ namespace TrustGuard.Infrastructure.Repositories
         {
             await _dbContext.NewsChecks.AddAsync(newsCheck);
             await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<List<NewsCheck>> GetUserHistoryAsync(string userId)
+        {
+            return await _dbContext.NewsChecks
+                .Where(c => c.UserId == userId)
+                .OrderByDescending(c => c.CheckDate) 
+                .ToListAsync();
+        }
+
+        public async Task<NewsCheck?> GetByIdAsync(int id)
+        {
+            return await _dbContext.NewsChecks.FirstOrDefaultAsync(c => c.Id == id);
         }
     }
 }

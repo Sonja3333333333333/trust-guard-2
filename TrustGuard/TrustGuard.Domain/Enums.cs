@@ -5,7 +5,7 @@
         Text,       
         Url,        
         Document,  
-        Image       
+        Image  
     }
 
     public enum Verdict
