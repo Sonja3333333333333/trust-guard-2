@@ -1,0 +1,58 @@
+﻿@model List<TrustGuard.Domain.Entities.NewsCheck>
+
+@{
+    ViewData["Title"] = "Full History";
+}
+
+<div class="container mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Назад до Дашборду
+        </a>
+    </div>
+
+    <div class="table-responsive border border-dark bg-white">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-secondary border-dark">
+                <tr>
+                    <th scope="col" class="text-center border-dark">Type</th>
+                    <th scope="col" class="border-dark">Date/Time</th>
+                    <th scope="col" class="border-dark">Object Analysis</th>
+                    <th scope="col" class="border-dark">Verdict</th>
+                    <th scope="col" class="border-dark">Confidence</th>
+                    <th scope="col" class="border-dark">Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var item in Model)
+                    {
+                        var isFake = item.Verdict == TrustGuard.Domain.Entities.Verdict.Fake;
+                        var isReal = item.Verdict == TrustGuard.Domain.Entities.Verdict.Real;
+                        var badgeClass = isFake ? "bg-danger" : (isReal ? "bg-success" : "bg-warning text-dark");
+                        
+                        var snippet = item.RawContent.Length > 60 ? item.RawContent.Substring(0, 60) + "..." : item.RawContent;
+
+                        <tr>
+                            <td class="text-center border-dark"><i class="bi bi-file-earmark-text fs-5"></i></td>
+                            <td class="text-nowrap border-dark">@item.CheckDate.ToString("dd.MM.yyyy HH:mm")</td>
+                            <td class="border-dark">"@snippet"</td>
+                            <td class="border-dark"><span class="badge @badgeClass rounded-pill">@item.Verdict.ToString().ToUpper()</span></td>
+                            <td class="border-dark">@(Math.Round(item.ConfidenceScore * 100))%</td>
+                            <td class="border-dark"><a href="#" class="text-primary text-decoration-underline">View</a></td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center p-4 text-muted border-dark">
+                            Історія порожня.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
