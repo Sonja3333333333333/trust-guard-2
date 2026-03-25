@@ -36,6 +36,8 @@ builder.Services.AddScoped<INewsCheckService, NewsCheckService>();
 // ДОДАНО: Реєстрація нашого сервісу для відправки пошти (простий варіант)
 builder.Services.AddScoped<IEmailSender, EmailService>();
 
+builder.Services.AddScoped<IFileParserService, FileParserService>();
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())

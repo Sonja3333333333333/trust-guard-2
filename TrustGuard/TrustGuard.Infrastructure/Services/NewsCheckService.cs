@@ -13,7 +13,7 @@ namespace TrustGuard.Infrastructure.Services
             _repository = repository;
         }
 
-        public async Task SaveCheckResultAsync(string userId, string content, string verdictString, float confidence)
+        public async Task SaveCheckResultAsync(string userId, string content, string verdictString, float confidence, ContentType contentType)
         {
             if (!Enum.TryParse<Verdict>(verdictString, true, out var finalVerdict))
             {
@@ -26,7 +26,7 @@ namespace TrustGuard.Infrastructure.Services
                 RawContent = content,
                 CheckDate = DateTime.UtcNow,
                 ConfidenceScore = confidence,
-                ContentType = ContentType.Text, 
+                ContentType = contentType, 
                 Verdict = finalVerdict          
             };
 

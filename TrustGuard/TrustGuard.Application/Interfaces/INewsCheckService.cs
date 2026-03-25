@@ -5,7 +5,7 @@ namespace TrustGuard.Application.Interfaces
 {
     public interface INewsCheckService
     {
-        Task SaveCheckResultAsync(string userId, string content, string verdict, float confidence);
+        Task SaveCheckResultAsync(string userId, string content, string verdictString, float confidence, ContentType contentType);
         Task<List<NewsCheck>> GetRecentUserHistoryAsync(string userId);
         Task<List<NewsCheck>> GetFullUserHistoryAsync(string userId);
         Task<DashboardStatsDto> GetDashboardStatsAsync(string userId);
