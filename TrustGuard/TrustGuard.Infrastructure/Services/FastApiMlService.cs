@@ -31,27 +31,5 @@ namespace TrustGuard.Infrastructure.Services
             return null;
         }
 
-        // НОВИЙ МЕТОД ДЛЯ ФАЙЛІВ
-        public async Task<MlAnalysisResponse?> AnalyzeFileAsync(Stream fileStream, string fileName, string contentType)
-        {
-            using var content = new MultipartFormDataContent();
-
-            // 1. Запаковуємо сам файл
-            var fileContent = new StreamContent(fileStream);
-            content.Add(fileContent, "file", fileName); // "file" - це ім'я параметра, яке буде чекати Python
-
-            // 2. Додаємо тип контенту (Document або Image)
-            content.Add(new StringContent(contentType), "content_type");
-
-            // 3. Відправляємо на спеціальний маршрут для файлів
-            var response = await _httpClient.PostAsync("api/analyze/file", content);
-
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadFromJsonAsync<MlAnalysisResponse>();
-            }
-
-            return null;
-        }
     }
 }

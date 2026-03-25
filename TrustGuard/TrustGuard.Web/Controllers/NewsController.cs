@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TrustGuard.Application.Interfaces;
-using Microsoft.AspNetCore.Http; // Додали для IFormFile
-using System.IO; // Додали для роботи з файлами
+using TrustGuard.Domain.Entities;
 
 namespace TrustGuard.Web.Controllers
 {
@@ -10,11 +9,14 @@ namespace TrustGuard.Web.Controllers
     {
         private readonly IMlService _mlService;
         private readonly INewsCheckService _newsCheckService;
+        private readonly IFileParserService _fileParserService; 
 
-        public NewsController(IMlService mlService, INewsCheckService newsCheckService)
+ 
+        public NewsController(IMlService mlService, INewsCheckService newsCheckService, IFileParserService fileParserService)
         {
             _mlService = mlService;
             _newsCheckService = newsCheckService;
+            _fileParserService = fileParserService;
         }
 
         [HttpGet]
@@ -23,54 +25,44 @@ namespace TrustGuard.Web.Controllers
             return View();
         }
 
-        // Зверни увагу: тепер ми приймаємо всі 4 параметри з нашої форми
         [HttpPost]
         public async Task<IActionResult> Analyze(string? textContent, string? urlContent, IFormFile? documentFile, IFormFile? imageFile)
         {
-            string finalDataToSave = ""; // Те, що ми запишемо в базу (текст, URL або назву файлу)
-            string detectedType = "";
+            string textToAnalyze = "";
+            ContentType detectedType = ContentType.Text;
             MlAnalysisResponse? result = null;
 
             try
             {
                 if (!string.IsNullOrWhiteSpace(textContent))
                 {
-                    detectedType = "Text";
-                    finalDataToSave = textContent;
-                    result = await _mlService.AnalyzeContentAsync(textContent, detectedType);
+                    detectedType = ContentType.Text;
+                    textToAnalyze = textContent;
                 }
                 else if (!string.IsNullOrWhiteSpace(urlContent))
                 {
-                    detectedType = "URL";
-                    finalDataToSave = urlContent;
-                    result = await _mlService.AnalyzeContentAsync(urlContent, detectedType);
+                    detectedType = ContentType.Url;
+                    textToAnalyze = urlContent;
                 }
+ 
                 else if (documentFile != null && documentFile.Length > 0)
                 {
-                    detectedType = "Document";
-                    finalDataToSave = documentFile.FileName;
+                    detectedType = ContentType.Document;
 
-                    if (Path.GetExtension(documentFile.FileName).ToLower() == ".txt")
+                    using var stream = documentFile.OpenReadStream();
+                    textToAnalyze = await _fileParserService.ExtractTextAsync(stream, documentFile.FileName);
+
+                    if (string.IsNullOrWhiteSpace(textToAnalyze))
                     {
-                        using var reader = new StreamReader(documentFile.OpenReadStream());
-                        var txtContent = await reader.ReadToEndAsync();
-                        result = await _mlService.AnalyzeContentAsync(txtContent, detectedType);
-                    }
-                    else
-                    {
-                        // PDF та DOCX відправляємо як файли!
-                        using var stream = documentFile.OpenReadStream();
-                        result = await _mlService.AnalyzeFileAsync(stream, documentFile.FileName, detectedType);
+                        ViewBag.Error = "Не вдалося витягнути текст із файлу. Можливо, він порожній або це відскановані картинки.";
+                        return View("Index");
                     }
                 }
                 else if (imageFile != null && imageFile.Length > 0)
                 {
-                    detectedType = "Image";
-                    finalDataToSave = imageFile.FileName;
-
-                    // Зображення відправляємо як файл!
-                    using var stream = imageFile.OpenReadStream();
-                    result = await _mlService.AnalyzeFileAsync(stream, imageFile.FileName, detectedType);
+    
+                    ViewBag.Error = "Аналіз зображень наразі в розробці. Будь ласка, завантажте документ або введіть текст.";
+                    return View("Index");
                 }
                 else
                 {
@@ -78,7 +70,8 @@ namespace TrustGuard.Web.Controllers
                     return View("Index");
                 }
 
-                // Обробляємо успішну відповідь від Python
+                result = await _mlService.AnalyzeContentAsync(textToAnalyze, detectedType.ToString());
+
                 if (result != null)
                 {
                     ViewBag.Verdict = result.Verdict;
@@ -87,8 +80,7 @@ namespace TrustGuard.Web.Controllers
                     var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                     if (!string.IsNullOrEmpty(userId))
                     {
-                        // Якщо це файл, в базу запишеться його назва. Якщо текст - сам текст.
-                        await _newsCheckService.SaveCheckResultAsync(userId, finalDataToSave, result.Verdict!, result.ConfidenceScore);
+                        await _newsCheckService.SaveCheckResultAsync(userId, textToAnalyze, result.Verdict!, result.ConfidenceScore, detectedType);
                         ViewBag.Message = $"Результат успішно збережено в історію! (Формат: {detectedType})";
                     }
                     else
@@ -103,7 +95,7 @@ namespace TrustGuard.Web.Controllers
             }
             catch (Exception ex)
             {
-                ViewBag.Error = $"Помилка з'єднання: {ex.Message}. Переконайтеся, що FastAPI запущений.";
+                ViewBag.Error = $"Сталася помилка: {ex.Message}";
             }
 
             return View("Index");
