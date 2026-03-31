@@ -1,22 +1,19 @@
 from celery import Celery
 import time
 import random
-import re  # Додали для роботи з текстом (пошук і заміна)
+import re
+from stop_words import get_stop_words # Підключаємо професійний датасет
 
-# Підключаємося до нашого Redis у Докері
+# Підключаємося до Redis
 app = Celery(
     'ml_tasks', 
     broker='redis://localhost:6379/0', 
     backend='redis://localhost:6379/0'
 )
 
-# Список найпопулярніших українських слів-паразитів
-UKRAINIAN_STOP_WORDS = {
-    "і", "та", "або", "чи", "а", "але", "в", "у", "на", "з", "із", "зі", 
-    "до", "від", "під", "над", "за", "про", "що", "як", "це", "то", "так", 
-    "ні", "ми", "ви", "вони", "він", "вона", "воно", "я", "ти", "мене", 
-    "тобі", "нам", "вам", "їх", "його", "її", "для", "щоб", "бо", "якщо"
-}
+# Завантажуємо офіційний датасет українських стоп-слів
+# Перетворюємо його у set (множину) для блискавичного пошуку
+UKRAINIAN_STOP_WORDS = set(get_stop_words('uk'))
 
 def clean_text(raw_text: str) -> str:
     """Очищення тексту перед відправкою в ML-модель."""
@@ -24,28 +21,28 @@ def clean_text(raw_text: str) -> str:
     text = raw_text.lower()
     
     # 2. Видаляємо всі URL-посилання
-    text = re.sub(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', '', text)
+    text = re.sub(r'http[s]?://\S+', '', text)
     
     # 3. Видаляємо всі цифри та знаки пунктуації
     text = re.sub(r'[^\w\s]', ' ', text)
     text = re.sub(r'\d+', '', text)
     
-    # 4. Фільтруємо стоп-слова
+    # 4. Фільтруємо текст через датасет стоп-слів
     words = text.split()
     cleaned_words = [word for word in words if word not in UKRAINIAN_STOP_WORDS]
     
     # 5. Зліплюємо слова назад
     return " ".join(cleaned_words)
 
-# @app.task вказує, що ця функція може виконуватися в окремому процесі
 @app.task
 def predict_news(text: str):
     print(f"ВОРКЕР: Отримав текст довжиною {len(text)} символів. Починаю аналіз...")
     
     # Пропускаємо текст через наш очищувач
     processed_text = clean_text(text)
+    
+    print(f"ВОРКЕР: В датасеті зараз {len(UKRAINIAN_STOP_WORDS)} стоп-слів.")
     print(f"ВОРКЕР: Текст очищено! Нова довжина: {len(processed_text)} символів.")
-    # Виводимо перші 100 символів очищеного тексту, щоб ти сам побачив результат
     print(f"ВОРКЕР: Перевірка: {processed_text[:100]}...")
     
     time.sleep(2) # Імітація важкої роботи нейромережі
@@ -58,5 +55,5 @@ def predict_news(text: str):
     return {
         "verdict": chosen_verdict,
         "confidenceScore": confidence,
-        "message": "Аналіз виконано на ізольованому Celery Worker!"
+        "message": "Аналіз виконано з використанням професійного датасету!"
     }
