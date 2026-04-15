@@ -17,3 +17,4 @@ python-docx
 celery
 redis
 python-multipart
+stop-words
