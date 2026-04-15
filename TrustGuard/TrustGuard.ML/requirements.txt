@@ -18,3 +18,5 @@ celery
 redis
 python-multipart
 stop-words
+scikit-learn
+pandas
