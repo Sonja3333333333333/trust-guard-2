@@ -1,33 +1,37 @@
 from celery import Celery
 import time
-import random
 import re
-import pickle # Бібліотека для розпакування нашого .pkl файлу
+import pickle
 from stop_words import get_stop_words
 
-# Підключаємося до Redis
 app = Celery(
     'ml_tasks', 
     broker='redis://localhost:6379/0', 
     backend='redis://localhost:6379/0'
 )
 
+# Завантажуємо стоп-слова один раз при старті
 UKRAINIAN_STOP_WORDS = set(get_stop_words('uk'))
 
-# --- НОВА МАГІЯ: ЗАВАНТАЖУЄМО TF-IDF ---
-print("ВОРКЕР: Завантажую математичну модель (TF-IDF)...")
+print("ВОРКЕР: Завантажую математичні моделі...")
 try:
+    # 1. Завантажуємо "перекладач" (векторизатор)
     with open('tfidf_vectorizer.pkl', 'rb') as f:
         tfidf_vectorizer = pickle.load(f)
-    print("ВОРКЕР: Модель успішно завантажена!")
-except FileNotFoundError:
-    print("ВОРКЕР: ПОМИЛКА! Файл tfidf_vectorizer.pkl не знайдено.")
+        
+    # 2. Завантажуємо "мозок" (навчену модель)
+    with open('classifier_model.pkl', 'rb') as f:
+        classifier_model = pickle.load(f)
+        
+    print("ВОРКЕР: Обидві моделі успішно завантажені! Готовий до роботи.")
+except FileNotFoundError as e:
+    print(f"ВОРКЕР: ПОМИЛКА! Не знайдено файл моделі: {e}")
     tfidf_vectorizer = None
-# ---------------------------------------
+    classifier_model = None
 
 def clean_text(raw_text: str) -> str:
-    """Очищення тексту перед відправкою в ML-модель."""
-    text = raw_text.lower()
+    """Очищення тексту (має бути ідентичним тому, що було при навчанні)."""
+    text = str(raw_text).lower()
     text = re.sub(r'http[s]?://\S+', '', text)
     text = re.sub(r'[^\w\s]', ' ', text)
     text = re.sub(r'\d+', '', text)
@@ -39,29 +43,32 @@ def clean_text(raw_text: str) -> str:
 
 @app.task
 def predict_news(text: str):
-    print(f"ВОРКЕР: Отримав текст довжиною {len(text)} символів.")
-    
-    # 1. Пропускаємо текст через очищувач
+    print(f"ВОРКЕР: Отримав новий запит ({len(text)} симв.)")
+
+    if not tfidf_vectorizer or not classifier_model:
+        return {"verdict": "Error", "confidenceScore": 0, "message": "Моделі не завантажені!"}
+
     processed_text = clean_text(text)
-    print(f"ВОРКЕР: Текст очищено: {processed_text[:50]}...")
     
-    # 2. ПЕРЕТВОРЕННЯ В ЦИФРИ
-    if tfidf_vectorizer:
-        # transform бере наш текст і робить з нього матрицю
-        text_matrix = tfidf_vectorizer.transform([processed_text])
-        print(f"ВОРКЕР: Магія відбулася! Текст перетворено на матрицю розміром {text_matrix.shape}")
-        # nnz показує, скільки унікальних слів із нашого словника знайшлося в цій новині
-        print(f"ВОРКЕР: Знайдено {text_matrix.nnz} важливих слів.")
+    text_vector = tfidf_vectorizer.transform([processed_text])
     
-    time.sleep(2) # Імітація роботи нейромережі
+    prediction = classifier_model.predict(text_vector)[0]
     
-    verdicts = ["Real", "Fake", "Uncertain"]
-    chosen_verdict = random.choices(verdicts, weights=[45, 45, 10], k=1)[0]
-    confidence = round(random.uniform(0.60, 0.99), 2)
+    probabilities = classifier_model.predict_proba(text_vector)[0]
+    confidence = float(max(probabilities))
+
+    verdict_map = {
+        "1": "Fake", "0": "Real",
+        1: "Fake", 0: "Real",
+        "FAKE": "Fake", "REAL": "Real"
+    }
     
-    print("ВОРКЕР: Аналіз завершено! Віддаю результат.")
+    final_verdict = verdict_map.get(prediction, str(prediction).capitalize())
+
+    print(f"ВОРКЕР: Результат аналізу -> {final_verdict} ({round(confidence*100)}%)")
+
     return {
-        "verdict": chosen_verdict,
-        "confidenceScore": confidence,
-        "message": "Текст очищено і перетворено на математичну матрицю!"
+        "verdict": final_verdict,
+        "confidenceScore": round(confidence, 2),
+        "message": "Аналіз проведено на основі навченої моделі ML."
     }
