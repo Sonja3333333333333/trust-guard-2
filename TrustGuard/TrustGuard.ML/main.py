@@ -11,8 +11,6 @@ class NewsRequest(BaseModel):
     content: str
     content_type: str 
 
-
-
 @app.post("/api/analyze")
 async def analyze_news(request: NewsRequest):
     print(f"[API] Отримав текст ({len(request.content)} символів). Відправляю задачу в Redis чергу...")
