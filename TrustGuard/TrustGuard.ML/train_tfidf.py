@@ -6,13 +6,13 @@ from stop_words import get_stop_words
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
-# === НОВИЙ ІМПОРТ: Замість LogisticRegression беремо RandomForest ===
 from sklearn.ensemble import RandomForestClassifier 
 
 print("1. Завантажуємо датасет...")
-df = pd.read_csv('data_set_4.csv')
+df = pd.read_csv('WELFake_Dataset.csv')
+df = df.dropna(subset=['text'])
 
-UKRAINIAN_STOP_WORDS = set(get_stop_words('uk'))
+UKRAINIAN_STOP_WORDS = set(get_stop_words('en'))
 
 def clean_text(raw_text):
     if not isinstance(raw_text, str):
@@ -26,13 +26,13 @@ def clean_text(raw_text):
     return " ".join(cleaned_words)
 
 print("2. Cleaning dataset data...")
-df['cleaned_text'] = df['Text'].apply(clean_text)
+df['cleaned_text'] = df['text'].apply(clean_text)
 
 print("3. TF-IDF...")
 vectorizer = TfidfVectorizer()
 X = vectorizer.fit_transform(df['cleaned_text'])
 
-y = df['Label'] 
+y = df['label'] 
 
 print("4. Saving to... tfidf_vectorizer.pkl")
 with open('tfidf_vectorizer.pkl', 'wb') as f:

@@ -1,5 +1,4 @@
 from celery import Celery
-import time
 import re
 import pickle
 from stop_words import get_stop_words
@@ -10,16 +9,13 @@ app = Celery(
     backend='redis://localhost:6379/0'
 )
 
-# Завантажуємо стоп-слова один раз при старті
-UKRAINIAN_STOP_WORDS = set(get_stop_words('uk'))
+ENGLISH_STOP_WORDS = set(get_stop_words('en'))
 
 print("ВОРКЕР: Завантажую математичні моделі...")
 try:
-    # 1. Завантажуємо "перекладач" (векторизатор)
     with open('tfidf_vectorizer.pkl', 'rb') as f:
         tfidf_vectorizer = pickle.load(f)
         
-    # 2. Завантажуємо "мозок" (навчену модель)
     with open('classifier_model.pkl', 'rb') as f:
         classifier_model = pickle.load(f)
         
@@ -37,7 +33,7 @@ def clean_text(raw_text: str) -> str:
     text = re.sub(r'\d+', '', text)
     
     words = text.split()
-    cleaned_words = [word for word in words if word not in UKRAINIAN_STOP_WORDS]
+    cleaned_words = [word for word in words if word not in ENGLISH_STOP_WORDS]
     
     return " ".join(cleaned_words)
 
@@ -70,5 +66,5 @@ def predict_news(text: str):
     return {
         "verdict": final_verdict,
         "confidenceScore": round(confidence, 2),
-        "message": "Аналіз проведено на основі навченої моделі ML."
+        "message": "Аналіз проведено на основі алгоритму Random Forest."
     }
