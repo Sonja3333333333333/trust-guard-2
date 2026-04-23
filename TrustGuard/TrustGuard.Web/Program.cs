@@ -7,6 +7,7 @@ using TrustGuard.Infrastructure.Repositories;
 using TrustGuard.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 
@@ -35,11 +36,11 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient<IMlService, FastApiMlService>();
 builder.Services.AddScoped<INewsCheckRepository, NewsCheckRepository>();
 builder.Services.AddScoped<INewsCheckService, NewsCheckService>();
-
-// ДОДАНО: Реєстрація нашого сервісу для відправки пошти (простий варіант)
 builder.Services.AddScoped<IEmailSender, EmailService>();
-
 builder.Services.AddScoped<IFileParserService, FileParserService>();
+
+// ДОДАНО: Реєстрація парсера посилань
+builder.Services.AddScoped<IUrlParserService, UrlParserService>();
 
 var app = builder.Build();
 
@@ -57,7 +58,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
-
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
