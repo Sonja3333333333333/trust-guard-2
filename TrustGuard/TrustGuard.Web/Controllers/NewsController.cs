@@ -60,9 +60,19 @@ namespace TrustGuard.Web.Controllers
                 }
                 else if (imageFile != null && imageFile.Length > 0)
                 {
-    
-                    ViewBag.Error = "Аналіз зображень наразі в розробці. Будь ласка, завантажте документ або введіть текст.";
-                    return View("Index");
+                    // Якщо у вас в Enum ContentType є тип Image - супер, став його. 
+                    // Якщо ні - можеш тимчасово поставити ContentType.Document
+                    detectedType = ContentType.Document;
+
+                    using var stream = imageFile.OpenReadStream();
+                    // Відправляємо фото в наш оновлений сервіс до Tesseract!
+                    textToAnalyze = await _fileParserService.ExtractTextAsync(stream, imageFile.FileName);
+
+                    if (string.IsNullOrWhiteSpace(textToAnalyze))
+                    {
+                        ViewBag.Error = "Не вдалося розпізнати текст на зображенні. Можливо, текст занадто розмитий або його там взагалі немає.";
+                        return View("Index");
+                    }
                 }
                 else
                 {
