@@ -9,14 +9,20 @@ namespace TrustGuard.Web.Controllers
     {
         private readonly IMlService _mlService;
         private readonly INewsCheckService _newsCheckService;
-        private readonly IFileParserService _fileParserService; 
+        private readonly IFileParserService _fileParserService;
+        private readonly IUrlParserService _urlParserService; // ДОДАЛИ НОВИЙ СЕРВІС
 
- 
-        public NewsController(IMlService mlService, INewsCheckService newsCheckService, IFileParserService fileParserService)
+        // ОНОВИЛИ КОНСТРУКТОР
+        public NewsController(
+            IMlService mlService,
+            INewsCheckService newsCheckService,
+            IFileParserService fileParserService,
+            IUrlParserService urlParserService)
         {
             _mlService = mlService;
             _newsCheckService = newsCheckService;
             _fileParserService = fileParserService;
+            _urlParserService = urlParserService;
         }
 
         [HttpGet]
@@ -39,12 +45,20 @@ namespace TrustGuard.Web.Controllers
                     detectedType = ContentType.Text;
                     textToAnalyze = textContent;
                 }
+                // --- ОНОВЛЕНИЙ БЛОК ДЛЯ URL ---
                 else if (!string.IsNullOrWhiteSpace(urlContent))
                 {
                     detectedType = ContentType.Url;
-                    textToAnalyze = urlContent;
+                    // Викликаємо наш парсер, щоб він скачав статтю!
+                    textToAnalyze = await _urlParserService.ExtractTextFromUrlAsync(urlContent);
+
+                    if (string.IsNullOrWhiteSpace(textToAnalyze) || textToAnalyze.StartsWith("Не вдалося"))
+                    {
+                        ViewBag.Error = "Не вдалося витягнути текст за цим посиланням. Можливо, сайт блокує парсинг або там немає статті.";
+                        return View("Index");
+                    }
                 }
- 
+                // -------------------------------
                 else if (documentFile != null && documentFile.Length > 0)
                 {
                     detectedType = ContentType.Document;
@@ -60,17 +74,14 @@ namespace TrustGuard.Web.Controllers
                 }
                 else if (imageFile != null && imageFile.Length > 0)
                 {
-                    // Якщо у вас в Enum ContentType є тип Image - супер, став його. 
-                    // Якщо ні - можеш тимчасово поставити ContentType.Document
-                    detectedType = ContentType.Document;
+                    detectedType = ContentType.Document; // Або ContentType.Image, якщо ви додали його в Enum
 
                     using var stream = imageFile.OpenReadStream();
-                    // Відправляємо фото в наш оновлений сервіс до Tesseract!
                     textToAnalyze = await _fileParserService.ExtractTextAsync(stream, imageFile.FileName);
 
                     if (string.IsNullOrWhiteSpace(textToAnalyze))
                     {
-                        ViewBag.Error = "Не вдалося розпізнати текст на зображенні. Можливо, текст занадто розмитий або його там взагалі немає.";
+                        ViewBag.Error = "Не вдалося розпізнати текст на зображенні. Можливо, текст занадто розмитий.";
                         return View("Index");
                     }
                 }
