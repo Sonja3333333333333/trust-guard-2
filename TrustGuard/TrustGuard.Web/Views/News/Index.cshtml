@@ -54,35 +54,87 @@
     </div>
 
     <div class="col-lg-4 mt-4 mt-lg-0">
-        <div class="border d-flex flex-column align-items-center justify-content-center bg-white h-100 p-4" style="min-height: 400px;">
+        <div class="d-flex flex-column h-100">
+        
+            <div class="border bg-white p-4 text-center mb-4 shadow-sm" style="border-radius: 12px; min-height: 450px;">
             
-            @if (ViewBag.Verdict != null)
-            {
-                var isFake = ViewBag.Verdict == "Fake";
-                var isReal = ViewBag.Verdict == "Real";
-                var colorClass = isFake ? "text-danger" : (isReal ? "text-success" : "text-warning");
-                var iconClass = isFake ? "bi-shield-x" : (isReal ? "bi-shield-check" : "bi-shield-exclamation");
-
-                <i class="bi @iconClass @colorClass mb-3" style="font-size: 5rem;"></i>
-                <h2 class="@colorClass fw-bold text-uppercase">@ViewBag.Verdict</h2>
-                <h5 class="text-muted mt-2">Впевненість: @(Math.Round(ViewBag.Confidence * 100))%</h5>
-
-                @if (ViewBag.Message != null)
+                @if (ViewBag.Verdict != null)
                 {
-                    <p class="text-muted small mt-4 text-center">@ViewBag.Message</p>
-                }
-            }
-            else if (ViewBag.Error != null)
-            {
-                <i class="bi bi-exclamation-triangle text-danger mb-3" style="font-size: 4rem;"></i>
-                <p class="text-danger text-center">@ViewBag.Error</p>
-            }
-            else
-            {
-                <i class="bi bi-box-seam text-muted mb-3" style="font-size: 4rem;"></i>
-                <h5 class="text-muted fw-light">Ready to start?</h5>
-            }
+                    <p class="text-muted small text-uppercase fw-bold mb-4">ML Аналіз</p>
 
+                    <div class="d-flex justify-content-center mb-4">
+                        <div class="rounded-circle d-flex flex-column align-items-center justify-content-center border border-3 @(ViewBag.Verdict == "Fake" ? "border-danger text-danger" : "border-success text-success")"
+                             style="width: 130px; height: 130px;">
+                            <span class="fw-bold h4 mb-0">@ViewBag.Verdict.ToString().ToUpper()</span>
+                            <span class="small">@Math.Round(Convert.ToDouble(ViewBag.Confidence))%</span>
+                        </div>
+                    </div>
+
+                    <p class="text-muted small text-uppercase fw-bold mb-3">Підтвердження джерел</p>
+
+                    <div class="d-flex justify-content-center mb-4">
+                        @{
+                            var osintStatus = ViewBag.OsintStatus?.ToString();
+                            var osintColor = osintStatus == "Confirmed" ? "border-success text-success" : "border-warning text-warning";
+                            var osintText = osintStatus == "Confirmed" ? "TRUE" : "CHECK";
+                        }
+                        <div class="rounded-circle d-flex flex-column align-items-center justify-content-center border border-3 @osintColor"
+                             style="width: 130px; height: 130px;">
+                            <span class="fw-bold h4 mb-0">@osintText</span>
+                            <span class="small">OSINT</span>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-light border d-flex align-items-center justify-content-start py-2 px-3 mt-auto" style="border-radius: 8px;">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <span class="small text-dark">
+                            @if (ViewBag.OsintStatus == "Confirmed")
+                            {
+                                @:Знайдено згадки (@(ViewBag.OsintLinks?.Count ?? 0)+)
+                            }
+                            else
+                            {
+                                @:Джерел не знайдено
+                            }
+                        </span>
+                    </div>
+                }
+                else if (ViewBag.Error != null)
+                {
+                    <div class="h-100 d-flex flex-column align-items-center justify-content-center">
+                        <i class="bi bi-exclamation-triangle text-danger mb-3" style="font-size: 3rem;"></i>
+                        <p class="text-danger text-center px-3">@ViewBag.Error</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="h-100 d-flex flex-column align-items-center justify-content-center text-muted">
+                        <i class="bi bi-cpu mb-3" style="font-size: 4rem;"></i>
+                        <h5 class="fw-light">Чекаю на дані...</h5>
+                    </div>
+                }
+            </div>
+
+            @if (ViewBag.OsintLinks != null && ((List<TrustGuard.Application.Interfaces.SourceLink>)ViewBag.OsintLinks).Any())
+            {
+                <div class="mt-2">
+                    <h6 class="fw-bold mb-3">Схоже у Google News</h6>
+                    <div class="border bg-white p-3 shadow-sm" style="border-radius: 12px;">
+                        <ol class="ps-3 mb-2">
+                            @foreach (var link in (List<TrustGuard.Application.Interfaces.SourceLink>)ViewBag.OsintLinks)
+                            {
+                                <li class="mb-2 small">
+                                    <a href="@link.Url" target="_blank" class="text-primary text-decoration-none d-block" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        @link.Name
+                                    </a>
+                                </li>
+                            }
+                        </ol>
+                        <a href="https://news.google.com" target="_blank" class="text-muted small text-decoration-none">See more...</a>
+                    </div>
+                </div>
+            }
         </div>
+    </div>
     </div>
 </div>
