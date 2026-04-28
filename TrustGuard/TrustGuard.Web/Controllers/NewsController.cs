@@ -10,9 +10,7 @@ namespace TrustGuard.Web.Controllers
         private readonly IMlService _mlService;
         private readonly INewsCheckService _newsCheckService;
         private readonly IFileParserService _fileParserService;
-        private readonly IUrlParserService _urlParserService; // ДОДАЛИ НОВИЙ СЕРВІС
-
-        // ОНОВИЛИ КОНСТРУКТОР
+        private readonly IUrlParserService _urlParserService;
         public NewsController(
             IMlService mlService,
             INewsCheckService newsCheckService,
@@ -45,11 +43,9 @@ namespace TrustGuard.Web.Controllers
                     detectedType = ContentType.Text;
                     textToAnalyze = textContent;
                 }
-                // --- ОНОВЛЕНИЙ БЛОК ДЛЯ URL ---
                 else if (!string.IsNullOrWhiteSpace(urlContent))
                 {
                     detectedType = ContentType.Url;
-                    // Викликаємо наш парсер, щоб він скачав статтю!
                     textToAnalyze = await _urlParserService.ExtractTextFromUrlAsync(urlContent);
 
                     if (string.IsNullOrWhiteSpace(textToAnalyze) || textToAnalyze.StartsWith("Не вдалося"))
@@ -58,7 +54,6 @@ namespace TrustGuard.Web.Controllers
                         return View("Index");
                     }
                 }
-                // -------------------------------
                 else if (documentFile != null && documentFile.Length > 0)
                 {
                     detectedType = ContentType.Document;
@@ -74,7 +69,7 @@ namespace TrustGuard.Web.Controllers
                 }
                 else if (imageFile != null && imageFile.Length > 0)
                 {
-                    detectedType = ContentType.Document; // Або ContentType.Image, якщо ви додали його в Enum
+                    detectedType = ContentType.Document;
 
                     using var stream = imageFile.OpenReadStream();
                     textToAnalyze = await _fileParserService.ExtractTextAsync(stream, imageFile.FileName);
@@ -93,15 +88,26 @@ namespace TrustGuard.Web.Controllers
 
                 result = await _mlService.AnalyzeContentAsync(textToAnalyze, detectedType.ToString());
 
-                if (result != null)
+                if (result != null && result.MlAnalysis != null)
                 {
-                    ViewBag.Verdict = result.Verdict;
-                    ViewBag.Confidence = result.ConfidenceScore;
+                    ViewBag.Verdict = result.MlAnalysis.Verdict;
+                    ViewBag.Confidence = result.MlAnalysis.ConfidenceScore;
+                    ViewBag.MlMessage = result.MlAnalysis.Message;
+
+                    ViewBag.OsintStatus = result.OsintAnalysis?.Status;
+                    ViewBag.OsintLinks = result.OsintAnalysis?.Links;
 
                     var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                     if (!string.IsNullOrEmpty(userId))
                     {
-                        await _newsCheckService.SaveCheckResultAsync(userId, textToAnalyze, result.Verdict!, result.ConfidenceScore, detectedType);
+                        await _newsCheckService.SaveCheckResultAsync(
+                            userId,
+                            textToAnalyze,
+                            result.MlAnalysis.Verdict!,
+                            result.MlAnalysis.ConfidenceScore,
+                            detectedType,
+                            result.OsintAnalysis?.Links);
+
                         ViewBag.Message = $"Результат успішно збережено в історію! (Формат: {detectedType})";
                     }
                     else

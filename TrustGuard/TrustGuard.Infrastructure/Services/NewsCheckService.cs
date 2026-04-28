@@ -13,7 +13,7 @@ namespace TrustGuard.Infrastructure.Services
             _repository = repository;
         }
 
-        public async Task SaveCheckResultAsync(string userId, string content, string verdictString, float confidence, ContentType contentType)
+        public async Task SaveCheckResultAsync(string userId, string content, string verdictString, float confidence, ContentType contentType, List<SourceLink>? osintLinks = null)
         {
             if (!Enum.TryParse<Verdict>(verdictString, true, out var finalVerdict))
             {
@@ -27,8 +27,22 @@ namespace TrustGuard.Infrastructure.Services
                 CheckDate = DateTime.UtcNow,
                 ConfidenceScore = confidence,
                 ContentType = contentType, 
-                Verdict = finalVerdict          
+                Verdict = finalVerdict,
+                ExternalSources = new List<ExternalSource>()
             };
+
+            if (osintLinks != null && osintLinks.Any())
+            {
+                foreach (var link in osintLinks)
+                {
+                    newsCheck.ExternalSources.Add(new ExternalSource
+                    {
+                        Title = link.Name ?? "Невідоме джерело",
+                        Url = link.Url ?? "",
+                        SourceName = "Google Search"
+                    });
+                }
+            }
 
             await _repository.AddAsync(newsCheck);
         }
