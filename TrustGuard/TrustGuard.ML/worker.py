@@ -110,7 +110,7 @@ def search_trusted_sources(query: str):
         if is_trusted(url):
             trusted_links.append(link_obj)
 
-        if len(trusted_links) >= 3:
+        if len(trusted_links) >= 10:
             break
 
     if trusted_links:
