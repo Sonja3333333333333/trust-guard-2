@@ -5,7 +5,7 @@
 <div class="row mt-4">
     <div class="col-lg-8">
         
-        <form asp-controller="News" asp-action="Analyze" method="post" enctype="multipart/form-data">
+        <form id="analyzeForm" asp-controller="News" asp-action="Analyze" method="post" enctype="multipart/form-data">
     
             <ul class="nav nav-tabs" id="checkTypeTabs" role="tablist">
                 <li class="nav-item" role="presentation">
@@ -57,84 +57,159 @@
         <div class="d-flex flex-column h-100">
         
             <div class="border bg-white p-4 text-center mb-4 shadow-sm" style="border-radius: 12px; min-height: 450px;">
-            
-                @if (ViewBag.Verdict != null)
-                {
-                    <p class="text-muted small text-uppercase fw-bold mb-4">ML Аналіз</p>
-
-                    <div class="d-flex justify-content-center mb-4">
-                        <div class="rounded-circle d-flex flex-column align-items-center justify-content-center border border-3 @(ViewBag.Verdict == "Fake" ? "border-danger text-danger" : "border-success text-success")"
-                             style="width: 130px; height: 130px;">
-                            <span class="fw-bold h4 mb-0">@ViewBag.Verdict.ToString().ToUpper()</span>
-                            <span class="small">@Math.Round(Convert.ToDouble(ViewBag.Confidence))%</span>
+    
+                <div id="panel-content" class="h-100">
+                    @if (ViewBag.Verdict != null)
+                    {
+                        <p class="text-muted small text-uppercase fw-bold mb-4">ML Аналіз</p>
+                        <div class="d-flex justify-content-center mb-4">
+                            <div class="rounded-circle d-flex flex-column align-items-center justify-content-center border border-3 @(ViewBag.Verdict == "Fake" ? "border-danger text-danger" : "border-success text-success")"
+                                 style="width: 130px; height: 130px;">
+                                <span class="fw-bold h4 mb-0">@ViewBag.Verdict.ToString().ToUpper()</span>
+                                <span class="small">@Math.Round(Convert.ToDouble(ViewBag.Confidence))%</span>
+                            </div>
                         </div>
-                    </div>
 
-                    <p class="text-muted small text-uppercase fw-bold mb-3">Підтвердження джерел</p>
-
-                    <div class="d-flex justify-content-center mb-4">
-                        @{
-                            var osintStatus = ViewBag.OsintStatus?.ToString();
-                            var osintColor = osintStatus == "Confirmed" ? "border-success text-success" : "border-warning text-warning";
-                            var osintText = osintStatus == "Confirmed" ? "TRUE" : "CHECK";
-                        }
-                        <div class="rounded-circle d-flex flex-column align-items-center justify-content-center border border-3 @osintColor"
-                             style="width: 130px; height: 130px;">
-                            <span class="fw-bold h4 mb-0">@osintText</span>
-                            <span class="small">OSINT</span>
+                        <p class="text-muted small text-uppercase fw-bold mb-3">Підтвердження джерел</p>
+                        <div class="d-flex justify-content-center mb-4">
+                            @{
+                                var osintStatus = ViewBag.OsintStatus?.ToString();
+                                var osintColor = osintStatus == "Confirmed" ? "border-success text-success" : "border-warning text-warning";
+                                var osintText = osintStatus == "Confirmed" ? "TRUE" : "CHECK";
+                            }
+                            <div class="rounded-circle d-flex flex-column align-items-center justify-content-center border border-3 @osintColor"
+                                 style="width: 130px; height: 130px;">
+                                <span class="fw-bold h4 mb-0">@osintText</span>
+                                <span class="small">OSINT</span>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="alert alert-light border d-flex align-items-center justify-content-start py-2 px-3 mt-auto" style="border-radius: 8px;">
-                        <i class="bi bi-info-circle me-2"></i>
-                        <span class="small text-dark">
-                            @if (ViewBag.OsintStatus == "Confirmed")
-                            {
-                                @:Знайдено згадки (@(ViewBag.OsintLinks?.Count ?? 0)+)
-                            }
-                            else
-                            {
-                                @:Джерел не знайдено
-                            }
-                        </span>
+                        <div class="alert alert-light border d-flex align-items-center justify-content-start py-2 px-3 mt-auto" style="border-radius: 8px;">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <span class="small text-dark">
+                                @if (ViewBag.OsintStatus == "Confirmed")
+                                {
+                                    @:Знайдено згадки (@(ViewBag.OsintLinks?.Count ?? 0)+)
+                                }
+                                else
+                                {
+                                    @:Джерел не знайдено
+                                }
+                            </span>
+                        </div>
+                    }
+                    else if (ViewBag.Error != null)
+                    {
+                        <div class="h-100 d-flex flex-column align-items-center justify-content-center">
+                            <i class="bi bi-exclamation-triangle text-danger mb-3" style="font-size: 3rem;"></i>
+                            <p class="text-danger text-center px-3">@ViewBag.Error</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="h-100 d-flex flex-column align-items-center justify-content-center text-muted">
+                            <i class="bi bi-robot mb-3" style="font-size: 4.5rem; opacity: 0.8;"></i>
+                            <h5 class="fw-light" style="letter-spacing: 0.5px;">Are you ready?</h5>
+                        </div>
+                    }
+                </div>
+
+                <div id="loading-spinner" class="d-none h-100 flex-column align-items-center justify-content-center bg-white" style="border-radius: 12px; min-height: 450px;">
+        
+                    <div class="w-75 bg-light" style="height: 3px; border-radius: 2px; overflow: hidden;">
+                        <div id="loading-progress-bar" class="bg-primary h-100" style="width: 0%; transition: width 0.1s linear;"></div>
                     </div>
-                }
-                else if (ViewBag.Error != null)
-                {
-                    <div class="h-100 d-flex flex-column align-items-center justify-content-center">
-                        <i class="bi bi-exclamation-triangle text-danger mb-3" style="font-size: 3rem;"></i>
-                        <p class="text-danger text-center px-3">@ViewBag.Error</p>
-                    </div>
-                }
-                else
-                {
-                    <div class="h-100 d-flex flex-column align-items-center justify-content-center text-muted">
-                        <i class="bi bi-cpu mb-3" style="font-size: 4rem;"></i>
-                        <h5 class="fw-light">Чекаю на дані...</h5>
-                    </div>
-                }
+        
+                </div>
+
             </div>
 
             @if (ViewBag.OsintLinks != null && ((List<TrustGuard.Application.Interfaces.SourceLink>)ViewBag.OsintLinks).Any())
             {
+                var links = (List<TrustGuard.Application.Interfaces.SourceLink>)ViewBag.OsintLinks;
+                
                 <div class="mt-2">
-                    <h6 class="fw-bold mb-3">Схоже у Google News</h6>
+                    <h6 class="fw-bold mb-3">Схоже у мережі</h6>
                     <div class="border bg-white p-3 shadow-sm" style="border-radius: 12px;">
                         <ol class="ps-3 mb-2">
-                            @foreach (var link in (List<TrustGuard.Application.Interfaces.SourceLink>)ViewBag.OsintLinks)
+                            @for (int i = 0; i < links.Count; i++)
                             {
-                                <li class="mb-2 small">
-                                    <a href="@link.Url" target="_blank" class="text-primary text-decoration-none d-block" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                        @link.Name
+                                // Якщо це 4-те посилання і далі - ховаємо його (d-none) і ставимо мітку (extra-link)
+                                var displayClass = i >= 3 ? "d-none extra-link" : "";
+                                
+                                <li class="mb-2 small @displayClass">
+                                    <a href="@links[i].Url" target="_blank" class="text-primary text-decoration-none d-block text-truncate">
+                                        @links[i].Name
                                     </a>
                                 </li>
                             }
                         </ol>
-                        <a href="https://news.google.com" target="_blank" class="text-muted small text-decoration-none">See more...</a>
+                        
+                        @* Показуємо кнопку тільки якщо посилань більше ніж 3 *@
+                        @if (links.Count > 3)
+                        {
+                            <button type="button" id="toggle-links-btn" class="btn btn-link text-muted small p-0 text-decoration-none shadow-none" onclick="toggleLinks()">
+                                See more...
+                            </button>
+                        }
                     </div>
                 </div>
             }
         </div>
     </div>
     </div>
-</div>
+<script>
+    function toggleLinks() {
+        const extraLinks = document.querySelectorAll('.extra-link');
+        const btn = document.getElementById('toggle-links-btn');
+        
+        let isHidden = extraLinks[0].classList.contains('d-none');
+        
+        if (isHidden) {
+            extraLinks.forEach(link => link.classList.remove('d-none'));
+            btn.innerText = "Згорнути";
+        } else {
+            extraLinks.forEach(link => link.classList.add('d-none'));
+            btn.innerText = "See more...";
+        }
+    }
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const form = document.getElementById('analyzeForm');
+        if (!form) return;
+
+        form.addEventListener('submit', function(e) {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            
+            setTimeout(() => {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Обробка...';
+            }, 10);
+
+            const panelContent = document.getElementById('panel-content');
+            if (panelContent) {
+                panelContent.classList.add('d-none');
+                panelContent.classList.remove('d-flex');
+            }
+
+            const loader = document.getElementById('loading-spinner');
+            if (loader) {
+                loader.classList.remove('d-none');
+                loader.classList.add('d-flex');
+            }
+
+            const progressBar = document.getElementById('loading-progress-bar');
+            let currentProgress = 0;
+
+            const progressInterval = setInterval(() => {
+                if (currentProgress < 95) {
+                    currentProgress += 1;
+                    progressBar.style.width = currentProgress + '%';
+                } else {
+                    clearInterval(progressInterval);
+                }
+            }, 80);
+        });
+    });
+</script>
