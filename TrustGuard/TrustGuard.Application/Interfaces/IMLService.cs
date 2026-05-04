@@ -9,6 +9,7 @@ namespace TrustGuard.Application.Interfaces
 
         [JsonPropertyName("content_type")]
         public required string ContentType { get; set; }
+        public List<string> TrustedDomains { get; set; } = new List<string>();
     }
 
     public class MlAnalysisResponse

@@ -6,19 +6,24 @@ namespace TrustGuard.Infrastructure.Services
     public class FastApiMlService : IMlService
     {
         private readonly HttpClient _httpClient;
+        private readonly IDomainService _domainService;
 
-        public FastApiMlService(HttpClient httpClient)
+        public FastApiMlService(HttpClient httpClient, IDomainService domainService)
         {
             _httpClient = httpClient;
             _httpClient.BaseAddress = new Uri("http://127.0.0.1:8000/");
+            _domainService = domainService;
         }
 
         public async Task<MlAnalysisResponse?> AnalyzeContentAsync(string text, string contentType = "Text")
         {
+            var trustedDomainsList = await _domainService.GetTrustedDomainsAsync();
+
             var requestData = new MlAnalysisRequest
             {
                 Content = text,
-                ContentType = contentType
+                ContentType = contentType,
+                TrustedDomains = trustedDomainsList
             };
 
             var response = await _httpClient.PostAsJsonAsync("api/analyze", requestData);

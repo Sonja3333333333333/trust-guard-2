@@ -61,7 +61,8 @@
                 <div id="panel-content" class="h-100">
                     @if (ViewBag.Verdict != null)
                     {
-                        <p class="text-muted small text-uppercase fw-bold mb-4">ML Аналіз</p>
+                        <!-- Блок ML Аналізу -->
+                        <p class="text-muted small text-uppercase fw-bold mb-4">ML Аналіз Тексту</p>
                         <div class="d-flex justify-content-center mb-4">
                             <div class="rounded-circle d-flex flex-column align-items-center justify-content-center border border-3 @(ViewBag.Verdict == "Fake" ? "border-danger text-danger" : "border-success text-success")"
                                  style="width: 130px; height: 130px;">
@@ -70,33 +71,28 @@
                             </div>
                         </div>
 
-                        <p class="text-muted small text-uppercase fw-bold mb-3">Підтвердження джерел</p>
-                        <div class="d-flex justify-content-center mb-4">
-                            @{
-                                var osintStatus = ViewBag.OsintStatus?.ToString();
-                                var osintColor = osintStatus == "Confirmed" ? "border-success text-success" : "border-warning text-warning";
-                                var osintText = osintStatus == "Confirmed" ? "TRUE" : "CHECK";
-                            }
-                            <div class="rounded-circle d-flex flex-column align-items-center justify-content-center border border-3 @osintColor"
-                                 style="width: 130px; height: 130px;">
-                                <span class="fw-bold h4 mb-0">@osintText</span>
-                                <span class="small">OSINT</span>
+                        <!-- НОВИЙ БЛОК: Аналіз джерела (Показується ТІЛЬКИ якщо перевіряли URL) -->
+                        @if (ViewBag.DomainScore != null)
+                        {
+                            <p class="text-muted small text-uppercase fw-bold mb-3 mt-4">Надійність джерела</p>
+                            <div class="d-flex flex-column align-items-center mb-4">
+                                <div class="rounded-circle d-flex flex-column align-items-center justify-content-center border border-3 border-primary text-primary mb-3"
+                                     style="width: 130px; height: 130px;">
+                                    <span class="fw-bold h2 mb-0">@ViewBag.DomainScore</span>
+                                    <span class="small">зі 100</span>
+                                </div>
+                                
+                                @if (ViewBag.DomainFactors != null)
+                                {
+                                    <ul class="list-unstyled text-start text-muted small" style="max-width: 250px;">
+                                        @foreach (var factor in (List<string>)ViewBag.DomainFactors)
+                                        {
+                                            <li class="mb-2">@factor</li>
+                                        }
+                                    </ul>
+                                }
                             </div>
-                        </div>
-
-                        <div class="alert alert-light border d-flex align-items-center justify-content-start py-2 px-3 mt-auto" style="border-radius: 8px;">
-                            <i class="bi bi-info-circle me-2"></i>
-                            <span class="small text-dark">
-                                @if (ViewBag.OsintStatus == "Confirmed")
-                                {
-                                    @:Знайдено згадки (@(ViewBag.OsintLinks?.Count ?? 0)+)
-                                }
-                                else
-                                {
-                                    @:Джерел не знайдено
-                                }
-                            </span>
-                        </div>
+                        }
                     }
                     else if (ViewBag.Error != null)
                     {
@@ -114,27 +110,27 @@
                     }
                 </div>
 
+                <!-- Мінімалістичний лоадер -->
                 <div id="loading-spinner" class="d-none h-100 flex-column align-items-center justify-content-center bg-white" style="border-radius: 12px; min-height: 450px;">
-        
                     <div class="w-75 bg-light" style="height: 3px; border-radius: 2px; overflow: hidden;">
                         <div id="loading-progress-bar" class="bg-primary h-100" style="width: 0%; transition: width 0.1s linear;"></div>
                     </div>
-        
                 </div>
 
             </div>
 
+            <!-- Оновлений блок із посиланнями -->
             @if (ViewBag.OsintLinks != null && ((List<TrustGuard.Application.Interfaces.SourceLink>)ViewBag.OsintLinks).Any())
             {
                 var links = (List<TrustGuard.Application.Interfaces.SourceLink>)ViewBag.OsintLinks;
                 
                 <div class="mt-2">
-                    <h6 class="fw-bold mb-3">Схоже у мережі</h6>
+                    <!-- Змінено заголовок тут -->
+                    <h6 class="fw-bold mb-3">Схоже у мережі серед довірених джерел:</h6>
                     <div class="border bg-white p-3 shadow-sm" style="border-radius: 12px;">
                         <ol class="ps-3 mb-2">
                             @for (int i = 0; i < links.Count; i++)
                             {
-                                // Якщо це 4-те посилання і далі - ховаємо його (d-none) і ставимо мітку (extra-link)
                                 var displayClass = i >= 3 ? "d-none extra-link" : "";
                                 
                                 <li class="mb-2 small @displayClass">
@@ -145,7 +141,6 @@
                             }
                         </ol>
                         
-                        @* Показуємо кнопку тільки якщо посилань більше ніж 3 *@
                         @if (links.Count > 3)
                         {
                             <button type="button" id="toggle-links-btn" class="btn btn-link text-muted small p-0 text-decoration-none shadow-none" onclick="toggleLinks()">
@@ -157,7 +152,8 @@
             }
         </div>
     </div>
-    </div>
+</div>
+
 <script>
     function toggleLinks() {
         const extraLinks = document.querySelectorAll('.extra-link');
@@ -173,8 +169,7 @@
             btn.innerText = "See more...";
         }
     }
-</script>
-<script>
+
     document.addEventListener("DOMContentLoaded", function() {
         const form = document.getElementById('analyzeForm');
         if (!form) return;

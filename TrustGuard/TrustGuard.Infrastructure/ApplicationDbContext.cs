@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore; // Тепер це запрацює!
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
+using TrustGuard.Domain;
 using TrustGuard.Domain.Entities;
 
 namespace TrustGuard.Infrastructure.Persistence
 {
-    // Використовуємо ApplicationUser, щоб не плутати студію
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
@@ -17,9 +18,9 @@ namespace TrustGuard.Infrastructure.Persistence
         public DbSet<ExternalSource> ExternalSources { get; set; } = null!;
         public DbSet<MediaMetadata> MediaMetadatas { get; set; } = null!;
 
-        public DbSet<TrustedDomain> TrustedDomains { get; set; }
+        public DbSet<DomainTrustRecord> DomainTrustRecords { get; set; }
 
-        // ModelBuilder (без "inger" наприкінці)
+        public DbSet<TrustedDomain> TrustedDomains { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -38,6 +39,9 @@ namespace TrustGuard.Infrastructure.Persistence
                 .HasMany(n => n.MediaMetadatas)
                 .WithOne(m => m.NewsCheck)
                 .HasForeignKey(m => m.NewsCheckId);
+            builder.Entity<DomainTrustRecord>()
+                .HasIndex(d => d.DomainName)
+                .IsUnique();
         }
     }
 }
