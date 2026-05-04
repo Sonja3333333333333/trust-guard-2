@@ -21,7 +21,6 @@ namespace TrustGuard.Application.Interfaces
         public OsintAnalysisData? OsintAnalysis { get; set; }
     }
 
-    // Дані ШІ
     public class MlAnalysisData
     {
         [JsonPropertyName("verdict")]
@@ -35,9 +34,11 @@ namespace TrustGuard.Application.Interfaces
 
         [JsonPropertyName("summary")]
         public string? Summary { get; set; }
+
+        [JsonPropertyName("keyTriggers")]
+        public List<string>? KeyTriggers { get; set; }
     }
 
-    // Дані Google Search (OSINT)
     public class OsintAnalysisData
     {
         [JsonPropertyName("status")]

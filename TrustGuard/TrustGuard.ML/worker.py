@@ -210,6 +210,18 @@ def predict_news(text: str, trusted_domains: list):
     # 1. ГЕНЕРУЄМО ТА ЗБЕРІГАЄМО SUMMARY
     text_summary = generate_summary(text)
     print("ВОРКЕР: Summary успішно згенеровано!") 
+    
+    top_keywords = []
+    try:
+        feature_names = tfidf_vectorizer.get_feature_names_out()
+        nonzero_indices = text_vector.nonzero()[1]
+        
+        word_scores = [(feature_names[idx], text_vector[0, idx]) for idx in nonzero_indices]
+        word_scores.sort(key=lambda x: x[1], reverse=True)
+        
+        top_keywords = [word for word, score in word_scores[:5]]
+    except Exception as e:
+        print(f"ВОРКЕР: Помилка витягування ключових слів: {e}")
 
     ml_verdict = verdict_map.get(prediction, str(prediction).capitalize())
 
@@ -224,7 +236,8 @@ def predict_news(text: str, trusted_domains: list):
             "verdict": ml_verdict,
             "confidenceScore": round(confidence * 100, 2),
             "message": "Аналіз проведено на основі ML моделі.",
-            "summary": text_summary # <--- ОСЬ ТУТ!
+            "summary": text_summary,
+            "keyTriggers": top_keywords
         },
         "osintAnalysis": osint_result
     }

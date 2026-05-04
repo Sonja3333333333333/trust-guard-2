@@ -110,6 +110,8 @@ namespace TrustGuard.Web.Controllers
 
                     ViewBag.OsintLinks = result.OsintAnalysis?.Links;
 
+                    ViewBag.KeyTriggers = result.MlAnalysis.KeyTriggers;
+
                     var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                     if (!string.IsNullOrEmpty(userId))
                     {
