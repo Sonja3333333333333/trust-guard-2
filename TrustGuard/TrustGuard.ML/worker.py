@@ -45,25 +45,14 @@ def clean_text(raw_text: str) -> str:
 
 # ---------------- OSINT SEARCH ---------------- #
 
-TRUSTED_DOMAINS = [
-    "bbc.com", "bbc.co.uk", "nytimes.com", "nature.com",
-    "scientificamerican.com", "smithsonianmag.com",
-    "nationalgeographic.com", "upi.com", "afp.com",
-    "reuters.com", "apnews.com",
-    "cnn.com", "washingtonpost.com", "theguardian.com",
-    "foxnews.com", "cbsnews.com", "nbcnews.com", "latimes.com"
-]
-
-
-def is_trusted(url):
+def is_trusted(url: str, trusted_domains: list) -> bool:
     try:
         domain = urlparse(url).netloc.lower()
-        return any(trusted in domain for trusted in TRUSTED_DOMAINS)
+        return any(trusted in domain for trusted in trusted_domains)
     except:
         return False
 
-
-def search_trusted_sources(query: str):
+def search_trusted_sources(query: str, trusted_domains: list):
     headline = query.split('\n')[0].strip()
     clean_query = re.sub(r'[^\w\s]', '', headline)
     words = clean_query.split()
@@ -73,7 +62,6 @@ def search_trusted_sources(query: str):
 
     raw_results = []
 
-    # retry (антибот)
     for attempt in range(3):
         try:
             with DDGS() as ddgs:
@@ -107,7 +95,7 @@ def search_trusted_sources(query: str):
         if len(fallback_links) < 3:
             fallback_links.append(link_obj)
 
-        if is_trusted(url):
+        if is_trusted(url, trusted_domains):
             trusted_links.append(link_obj)
 
         if len(trusted_links) >= 10:
@@ -130,9 +118,8 @@ def search_trusted_sources(query: str):
 
 
 # ---------------- MAIN TASK ---------------- #
-
 @app.task
-def predict_news(text: str):
+def predict_news(text: str, trusted_domains: list):
     print(f"ВОРКЕР: Отримав новий запит ({len(text)} симв.)")
 
     if not tfidf_vectorizer or not classifier_model:
@@ -162,7 +149,7 @@ def predict_news(text: str):
 
     print(f"ВОРКЕР: ML Verdict -> {ml_verdict} ({round(confidence*100)}%)")
 
-    osint_result = search_trusted_sources(text)
+    osint_result = search_trusted_sources(text, trusted_domains)
     print(f"ВОРКЕР: OSINT Status -> {osint_result['status']}")
 
     return {

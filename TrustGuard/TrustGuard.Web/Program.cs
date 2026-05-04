@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TrustGuard.Application.Interfaces;
+using TrustGuard.Application.Services;
 using TrustGuard.Domain.Entities;
 using TrustGuard.Infrastructure.Persistence;
 using TrustGuard.Infrastructure.Repositories;
@@ -38,6 +39,10 @@ builder.Services.AddScoped<INewsCheckRepository, NewsCheckRepository>();
 builder.Services.AddScoped<INewsCheckService, NewsCheckService>();
 builder.Services.AddScoped<IEmailSender, EmailService>();
 builder.Services.AddScoped<IFileParserService, FileParserService>();
+builder.Services.AddScoped<IDomainRepository, DomainRepository>();
+builder.Services.AddScoped<IDomainService, DomainService>();
+builder.Services.AddScoped<IDomainTrustRepository, DomainTrustRepository>();
+builder.Services.AddScoped<IDomainScoringService, DomainScoringService>();
 
 // ДОДАНО: Реєстрація парсера посилань
 builder.Services.AddScoped<IUrlParserService, UrlParserService>();

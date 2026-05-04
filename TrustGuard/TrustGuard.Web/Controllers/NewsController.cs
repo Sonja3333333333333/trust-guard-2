@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.Text.Json;
 using TrustGuard.Application.Interfaces;
 using TrustGuard.Domain.Entities;
 
@@ -11,16 +12,20 @@ namespace TrustGuard.Web.Controllers
         private readonly INewsCheckService _newsCheckService;
         private readonly IFileParserService _fileParserService;
         private readonly IUrlParserService _urlParserService;
+        private readonly IDomainScoringService _domainScoringService;
+
         public NewsController(
             IMlService mlService,
             INewsCheckService newsCheckService,
             IFileParserService fileParserService,
-            IUrlParserService urlParserService)
+            IUrlParserService urlParserService,
+            IDomainScoringService domainScoringService)
         {
             _mlService = mlService;
             _newsCheckService = newsCheckService;
             _fileParserService = fileParserService;
             _urlParserService = urlParserService;
+            _domainScoringService = domainScoringService;
         }
 
         [HttpGet]
@@ -52,6 +57,13 @@ namespace TrustGuard.Web.Controllers
                     {
                         ViewBag.Error = "Не вдалося витягнути текст за цим посиланням. Можливо, сайт блокує парсинг або там немає статті.";
                         return View("Index");
+                    }
+
+                    var domainRecord = await _domainScoringService.ScoreDomainAsync(urlContent);
+                    ViewBag.DomainScore = domainRecord.TrustScore;
+                    if (!string.IsNullOrEmpty(domainRecord.FactorsJson))
+                    {
+                        ViewBag.DomainFactors = JsonSerializer.Deserialize<List<string>>(domainRecord.FactorsJson);
                     }
                 }
                 else if (documentFile != null && documentFile.Length > 0)
@@ -94,7 +106,6 @@ namespace TrustGuard.Web.Controllers
                     ViewBag.Confidence = result.MlAnalysis.ConfidenceScore;
                     ViewBag.MlMessage = result.MlAnalysis.Message;
 
-                    ViewBag.OsintStatus = result.OsintAnalysis?.Status;
                     ViewBag.OsintLinks = result.OsintAnalysis?.Links;
 
                     var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
