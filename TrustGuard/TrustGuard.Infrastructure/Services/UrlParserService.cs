@@ -1,15 +1,14 @@
 ﻿using SmartReader;
 using System.Text.RegularExpressions;
 using TrustGuard.Application.Interfaces;
-using Microsoft.Extensions.Logging; // Обов'язково додаємо для логера
+using Microsoft.Extensions.Logging;
 
 namespace TrustGuard.Infrastructure.Services
 {
     public class UrlParserService : IUrlParserService
     {
-        private readonly ILogger<UrlParserService> _logger; // Створюємо змінну
+        private readonly ILogger<UrlParserService> _logger;
 
-        // Конструктор: .NET сам підкине сюди логер
         public UrlParserService(ILogger<UrlParserService> logger)
         {
             _logger = logger;
@@ -30,9 +29,11 @@ namespace TrustGuard.Infrastructure.Services
                 }
 
                 string cleanText = article.TextContent;
+
                 cleanText = Regex.Replace(cleanText, @"\n{3,}", "\n\n").Trim();
 
-                // МАГІЯ: ВИВОДИМО ТЕКСТ У КОНСОЛЬ
+                cleanText = Regex.Replace(cleanText, @"\.(?=[A-ZА-ЯІЇЄҐ])", ". ");
+
                 _logger.LogInformation("\n=== ВИТЯГНУТИЙ ТЕКСТ З URL ===\n{Text}\n==============================", cleanText);
 
                 return cleanText;
