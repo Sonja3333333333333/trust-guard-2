@@ -17,6 +17,8 @@ namespace TrustGuard.Infrastructure.Persistence
         public DbSet<ExternalSource> ExternalSources { get; set; } = null!;
         public DbSet<MediaMetadata> MediaMetadatas { get; set; } = null!;
 
+        public DbSet<TrustedDomain> TrustedDomains { get; set; }
+
         // ModelBuilder (без "inger" наприкінці)
         protected override void OnModelCreating(ModelBuilder builder)
         {
