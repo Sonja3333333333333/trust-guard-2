@@ -2,21 +2,19 @@
 using System.Text;
 using TrustGuard.Application.Interfaces;
 using UglyToad.PdfPig;
-using Tesseract; // Додали Tesseract
-using Microsoft.Extensions.Logging; 
-
-
+using Tesseract;
+using Microsoft.Extensions.Logging;
 namespace TrustGuard.Infrastructure.Services
 {
     public class FileParserService : IFileParserService
     {
         private readonly ILogger<FileParserService> _logger;
 
-        // Конструктор: .NET сам передасть сюди логер (Dependency Injection)
         public FileParserService(ILogger<FileParserService> logger)
         {
             _logger = logger;
         }
+
         public async Task<string> ExtractTextAsync(Stream fileStream, string fileName)
         {
             if (fileStream == null || fileStream.Length == 0)
@@ -29,7 +27,6 @@ namespace TrustGuard.Infrastructure.Services
                 ".txt" => await ParseTxtAsync(fileStream),
                 ".pdf" => ParsePdf(fileStream),
                 ".docx" => ParseDocx(fileStream),
-                // Додаємо підтримку картинок
                 ".jpg" or ".jpeg" or ".png" => ParseImage(fileStream),
                 _ => throw new ArgumentException($"Формат {extension} не підтримується.")
             };
@@ -48,7 +45,7 @@ namespace TrustGuard.Infrastructure.Services
             {
                 foreach (var page in pdf.GetPages())
                 {
-                    text.AppendLine(page.Text);
+                    text.AppendLine(page.Text + " ");
                 }
             }
             return text.ToString();
@@ -57,25 +54,30 @@ namespace TrustGuard.Infrastructure.Services
         private string ParseDocx(Stream stream)
         {
             using var wordDoc = WordprocessingDocument.Open(stream, false);
-            return wordDoc.MainDocumentPart?.Document.Body?.InnerText ?? string.Empty;
+            var body = wordDoc.MainDocumentPart?.Document.Body;
+
+            if (body == null) return string.Empty;
+
+            var paragraphs = body.Elements<DocumentFormat.OpenXml.Wordprocessing.Paragraph>()
+                                 .Select(p => p.InnerText)
+                                 .Where(text => !string.IsNullOrWhiteSpace(text));
+
+            return string.Join("\n", paragraphs);
         }
 
-        // --- НОВИЙ МЕТОД ДЛЯ ФОТО ---
         private string ParseImage(Stream stream)
         {
             try
             {
-                // Конвертуємо Stream у byte[], бо Tesseract вимагає цього
                 using var ms = new MemoryStream();
                 stream.CopyTo(ms);
                 byte[] imageBytes = ms.ToArray();
 
-                // Шлях до папки зі словниками (tessdata). 
-                // "ukr+eng" означає, що ми розпізнаємо і українську, і англійську одночасно
                 using var engine = new TesseractEngine(@"./tessdata", "ukr+eng", EngineMode.Default);
                 using var img = Pix.LoadFromMemory(imageBytes);
                 using var page = engine.Process(img);
                 var extractedText = page.GetText();
+
                 _logger.LogInformation("\n=== ВИТЯГНУТИЙ ТЕКСТ З ФОТО ===\n{Text}\n===============================", extractedText);
                 return extractedText;
             }

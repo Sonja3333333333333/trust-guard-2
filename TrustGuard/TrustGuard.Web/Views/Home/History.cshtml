@@ -26,6 +26,17 @@
             <tbody>
                 @if (Model != null && Model.Any())
                 {
+                    // КРОК 1: Отримуємо часовий пояс України один раз перед циклом
+                    TimeZoneInfo ukraineTimeZone;
+                    try
+                    {
+                        ukraineTimeZone = TimeZoneInfo.FindSystemTimeZoneById("FLE Standard Time"); // Для Windows
+                    }
+                    catch
+                    {
+                        ukraineTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Kyiv"); // Для Linux/Mac
+                    }
+
                     foreach (var item in Model)
                     {
                         var isFake = item.Verdict == TrustGuard.Domain.Entities.Verdict.Fake;
@@ -34,12 +45,18 @@
                         
                         var snippet = item.RawContent.Length > 60 ? item.RawContent.Substring(0, 60) + "..." : item.RawContent;
 
+                        DateTime localTime = TimeZoneInfo.ConvertTimeFromUtc(item.CheckDate, ukraineTimeZone);
+
                         <tr>
                             <td class="text-center border-dark"><i class="bi bi-file-earmark-text fs-5"></i></td>
-                            <td class="text-nowrap border-dark">@item.CheckDate.ToString("dd.MM.yyyy HH:mm")</td>
+                            
+                            <td class="text-nowrap border-dark">@localTime.ToString("dd.MM.yyyy HH:mm")</td>
+                            
                             <td class="border-dark">"@snippet"</td>
                             <td class="border-dark"><span class="badge @badgeClass rounded-pill">@item.Verdict.ToString().ToUpper()</span></td>
-                            <td class="border-dark">@(Math.Round(item.ConfidenceScore * 100))%</td>
+                            
+                            <td class="border-dark">@(Math.Round(item.ConfidenceScore))%</td>
+                            
                             <td class="border-dark"><a href="#" class="text-primary text-decoration-underline">View</a></td>
                         </tr>
                     }

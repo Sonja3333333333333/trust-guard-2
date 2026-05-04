@@ -5,6 +5,9 @@ import time
 from stop_words import get_stop_words
 from ddgs import DDGS
 from urllib.parse import urlparse
+import nltk
+from nltk.tokenize import sent_tokenize, word_tokenize
+import heapq
 
 app = Celery(
     'ml_tasks',
@@ -115,7 +118,65 @@ def search_trusted_sources(query: str, trusted_domains: list):
         "links": fallback_links,
         "message": "Авторитетні джерела не знайдені."
     }
+    
+    
+# ---------------- SUMMARY ---------------- #
+def clean_extracted_sentence(sentence: str) -> str:
+    cleaned = re.sub(r'^(Earlier|Also|However|Furthermore|In addition|Meanwhile|Separately|Additionally),\s*', '', sentence, flags=re.IGNORECASE)
+ 
+    cleaned = re.sub(r'\s+also\s+', ' ', cleaned, flags=re.IGNORECASE)
+    
+    cleaned = re.sub(r',\s*(the statement added|he added|she added|according to[^\.]+)(?=\.)', '', cleaned, flags=re.IGNORECASE)
 
+    if cleaned:
+        cleaned = cleaned[0].upper() + cleaned[1:]
+        
+    return cleaned
+
+def generate_summary(text: str, num_sentences: int = 3) -> str:
+    try:
+        fixed_text = re.sub(r'\.(?=[A-ZА-ЯІЇЄҐ])', '. ', text)
+        sentences = sent_tokenize(fixed_text)
+        
+        if len(sentences) <= num_sentences:
+            return "\n".join([f"• {sent.strip()}" for sent in sentences])
+
+        word_frequencies = {}
+        for word in word_tokenize(fixed_text.lower()):
+            if word.isalnum() and word not in ENGLISH_STOP_WORDS:
+                if word not in word_frequencies:
+                    word_frequencies[word] = 1
+                else:
+                    word_frequencies[word] += 1
+
+        if not word_frequencies:
+            return f"• {fixed_text[:200]}..."
+
+        max_frequency = max(word_frequencies.values())
+        for word in word_frequencies.keys():
+            word_frequencies[word] = (word_frequencies[word] / max_frequency)
+
+        sentence_scores = {}
+        for sent in sentences:
+            for word in word_tokenize(sent.lower()):
+                if word in word_frequencies:
+                    if len(sent.split(' ')) < 30: 
+                        if sent not in sentence_scores:
+                            sentence_scores[sent] = word_frequencies[word]
+                        else:
+                            sentence_scores[sent] += word_frequencies[word]
+
+        summary_sentences = heapq.nlargest(num_sentences, sentence_scores, key=sentence_scores.get)
+        summary = [sent for sent in sentences if sent in summary_sentences]
+        
+        bullet_points = [f"• {clean_extracted_sentence(sent.strip())}" for sent in summary]
+        
+        return "\n".join(bullet_points)
+
+    except Exception as e:
+        print(f"ВОРКЕР: Помилка генерації summary: {e}")
+        fallback_sentences = sent_tokenize(text)[:num_sentences]
+        return "\n".join([f"• {sent.strip()}" for sent in fallback_sentences])
 
 # ---------------- MAIN TASK ---------------- #
 @app.task
@@ -127,7 +188,8 @@ def predict_news(text: str, trusted_domains: list):
             "mlAnalysis": {
                 "verdict": "Error",
                 "confidenceScore": 0,
-                "message": "Моделі не завантажені!"
+                "message": "Моделі не завантажені!",
+                "summary": "" # Додаємо сюди пустий рядок для безпеки
             },
             "osintAnalysis": {}
         }
@@ -144,6 +206,10 @@ def predict_news(text: str, trusted_domains: list):
         1: "Fake", 0: "Real",
         "FAKE": "Fake", "REAL": "Real"
     }
+    
+    # 1. ГЕНЕРУЄМО ТА ЗБЕРІГАЄМО SUMMARY
+    text_summary = generate_summary(text)
+    print("ВОРКЕР: Summary успішно згенеровано!") 
 
     ml_verdict = verdict_map.get(prediction, str(prediction).capitalize())
 
@@ -152,11 +218,13 @@ def predict_news(text: str, trusted_domains: list):
     osint_result = search_trusted_sources(text, trusted_domains)
     print(f"ВОРКЕР: OSINT Status -> {osint_result['status']}")
 
+    # 2. ДОДАЄМО SUMMARY У ФІНАЛЬНУ ВІДПОВІДЬ
     return {
         "mlAnalysis": {
             "verdict": ml_verdict,
             "confidenceScore": round(confidence * 100, 2),
-            "message": "Аналіз проведено на основі ML моделі."
+            "message": "Аналіз проведено на основі ML моделі.",
+            "summary": text_summary # <--- ОСЬ ТУТ!
         },
         "osintAnalysis": osint_result
     }

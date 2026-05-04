@@ -62,6 +62,16 @@
         <tbody>
             @if (Model.RecentHistory != null && Model.RecentHistory.Any())
             {
+                TimeZoneInfo ukraineTimeZone;
+                try
+                {
+                    ukraineTimeZone = TimeZoneInfo.FindSystemTimeZoneById("FLE Standard Time");
+                }
+                catch
+                {
+                    ukraineTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Kyiv");
+                }
+
                 foreach (var item in Model.RecentHistory)
                 {
                     var isFake = item.Verdict == TrustGuard.Domain.Entities.Verdict.Fake;
@@ -69,12 +79,18 @@
                     var badgeClass = isFake ? "bg-danger" : (isReal ? "bg-success" : "bg-warning text-dark");
                     var snippet = item.RawContent.Length > 40 ? item.RawContent.Substring(0, 40) + "..." : item.RawContent;
 
+                    DateTime localTime = TimeZoneInfo.ConvertTimeFromUtc(item.CheckDate, ukraineTimeZone);
+
                     <tr>
                         <td class="text-center border-dark"><i class="bi bi-file-earmark-text fs-5"></i></td>
-                        <td class="text-nowrap border-dark">@item.CheckDate.ToString("dd.MM.yyyy HH:mm")</td>
+                            
+                        <td class="text-nowrap border-dark">@localTime.ToString("dd.MM.yyyy HH:mm")</td>
+                            
                         <td class="border-dark">"@snippet"</td>
                         <td class="border-dark"><span class="badge @badgeClass rounded-pill">@item.Verdict.ToString().ToUpper()</span></td>
-                        <td class="border-dark">@(Math.Round(item.ConfidenceScore * 100))%</td>
+                            
+                        <td class="border-dark">@(Math.Round(item.ConfidenceScore))%</td>
+                            
                         <td class="border-dark"><a asp-controller="Home" asp-action="Details" asp-route-id="@item.Id" class="text-primary text-decoration-underline small">View</a></td>
                     </tr>
                 }

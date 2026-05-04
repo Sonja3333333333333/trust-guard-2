@@ -106,6 +106,8 @@ namespace TrustGuard.Web.Controllers
                     ViewBag.Confidence = result.MlAnalysis.ConfidenceScore;
                     ViewBag.MlMessage = result.MlAnalysis.Message;
 
+                    ViewBag.Summary = result.MlAnalysis.Summary;
+
                     ViewBag.OsintLinks = result.OsintAnalysis?.Links;
 
                     var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);

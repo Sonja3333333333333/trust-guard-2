@@ -32,6 +32,9 @@ namespace TrustGuard.Application.Interfaces
 
         [JsonPropertyName("message")]
         public string? Message { get; set; }
+
+        [JsonPropertyName("summary")]
+        public string? Summary { get; set; }
     }
 
     // Дані Google Search (OSINT)
