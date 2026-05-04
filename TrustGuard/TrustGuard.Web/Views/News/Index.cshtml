@@ -51,6 +51,23 @@
     
         </form>
 
+        @if (ViewBag.KeyTriggers != null && ViewBag.KeyTriggers.Count > 0)
+        {
+            <div class="mt-4 mb-3">
+                <h6 class="fw-bold text-muted mb-2">
+                    Слова, що вплинули на рішення:
+                </h6>
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach (var word in ViewBag.KeyTriggers)
+                    {
+                        <span class="badge bg-light text-dark border px-3 py-2" style="border-radius: 20px; font-size: 0.9rem;">
+                            @word
+                        </span>
+                    }
+                </div>
+            </div>
+        }
+
         @if (!string.IsNullOrEmpty(ViewBag.Summary))
         {
             <div class="mt-4 p-4 bg-white border shadow-sm text-start" style="border-radius: 12px; border-left: 5px solid #0d6efd !important;">
