@@ -21,5 +21,10 @@
 
         // Змінили на колекцію, як ти і пропонувала! (1:N)
         public virtual ICollection<MediaMetadata> MediaMetadatas { get; set; } = new List<MediaMetadata>();
+
+        public string? Summary { get; set; }
+
+        public virtual ICollection<KeyTrigger> KeyTriggers { get; set; } = new List<KeyTrigger>();
     }
+
 }
