@@ -102,6 +102,21 @@ namespace TrustGuard.Infrastructure.Services
 
             stats.RecentHistory = fullHistory.Take(10).ToList();
 
+            var last7Days = Enumerable.Range(0, 7)
+                .Select(i => DateTime.UtcNow.Date.AddDays(-i))
+                .Reverse()
+                .ToList();
+
+            foreach (var date in last7Days)
+            {
+                stats.ChartLabels.Add(date.ToString("dd.MM"));
+
+                var checksOnDate = fullHistory.Where(c => c.CheckDate.Date == date).ToList();
+
+                stats.ChartRealData.Add(checksOnDate.Count(c => c.Verdict == TrustGuard.Domain.Entities.Verdict.Real));
+                stats.ChartFakeData.Add(checksOnDate.Count(c => c.Verdict == TrustGuard.Domain.Entities.Verdict.Fake));
+            }
+
             return stats;
         }
 
