@@ -13,7 +13,6 @@ namespace TrustGuard.Infrastructure.Persistence
         {
         }
 
-        public DbSet<NewsCheck> NewsChecks { get; set; } = null!;
         public DbSet<AnalysisReport> AnalysisReports { get; set; } = null!;
         public DbSet<ExternalSource> ExternalSources { get; set; } = null!;
         public DbSet<MediaMetadata> MediaMetadatas { get; set; } = null!;
@@ -21,6 +20,8 @@ namespace TrustGuard.Infrastructure.Persistence
         public DbSet<DomainTrustRecord> DomainTrustRecords { get; set; }
 
         public DbSet<TrustedDomain> TrustedDomains { get; set; }
+        public DbSet<NewsCheck> NewsChecks { get; set; }
+        public DbSet<KeyTrigger> KeyTriggers { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

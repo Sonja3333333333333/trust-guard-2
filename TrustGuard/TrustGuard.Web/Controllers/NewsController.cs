@@ -121,7 +121,9 @@ namespace TrustGuard.Web.Controllers
                             result.MlAnalysis.Verdict!,
                             result.MlAnalysis.ConfidenceScore,
                             detectedType,
-                            result.OsintAnalysis?.Links);
+                            result.OsintAnalysis?.Links,
+                            result.MlAnalysis.Summary,
+                            result.MlAnalysis.KeyTriggers);
 
                         ViewBag.Message = $"Результат успішно збережено в історію! (Формат: {detectedType})";
                     }

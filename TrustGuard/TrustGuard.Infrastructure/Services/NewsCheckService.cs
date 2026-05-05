@@ -13,7 +13,15 @@ namespace TrustGuard.Infrastructure.Services
             _repository = repository;
         }
 
-        public async Task SaveCheckResultAsync(string userId, string content, string verdictString, float confidence, ContentType contentType, List<SourceLink>? osintLinks = null)
+        public async Task SaveCheckResultAsync(
+             string userId,
+             string content,
+             string verdictString,
+             float confidence,
+             ContentType contentType,
+             List<SourceLink>? osintLinks = null,
+             string? summary = null,
+             List<string>? keyTriggers = null)
         {
             if (!Enum.TryParse<Verdict>(verdictString, true, out var finalVerdict))
             {
@@ -28,7 +36,9 @@ namespace TrustGuard.Infrastructure.Services
                 ConfidenceScore = confidence,
                 ContentType = contentType, 
                 Verdict = finalVerdict,
-                ExternalSources = new List<ExternalSource>()
+                Summary = summary,
+                ExternalSources = new List<ExternalSource>(),
+                KeyTriggers = new List<KeyTrigger>()
             };
 
             if (osintLinks != null && osintLinks.Any())
@@ -40,6 +50,17 @@ namespace TrustGuard.Infrastructure.Services
                         Title = link.Name ?? "Невідоме джерело",
                         Url = link.Url ?? "",
                         SourceName = "Google Search"
+                    });
+                }
+            }
+
+            if (keyTriggers != null && keyTriggers.Any())
+            {
+                foreach (var word in keyTriggers)
+                {
+                    newsCheck.KeyTriggers.Add(new KeyTrigger
+                    {
+                        Word = word
                     });
                 }
             }

@@ -30,7 +30,10 @@ namespace TrustGuard.Infrastructure.Repositories
 
         public async Task<NewsCheck?> GetByIdAsync(int id)
         {
-            return await _dbContext.NewsChecks.FirstOrDefaultAsync(c => c.Id == id);
+            return await _dbContext.NewsChecks
+                .Include(n => n.ExternalSources)
+                .Include(n => n.KeyTriggers)
+                .FirstOrDefaultAsync(c => c.Id == id);
         }
     }
 }

@@ -7,42 +7,147 @@
     var isReal = Model.Verdict == TrustGuard.Domain.Entities.Verdict.Real;
     var colorClass = isFake ? "text-danger" : (isReal ? "text-success" : "text-warning");
     var iconClass = isFake ? "bi-shield-x" : (isReal ? "bi-shield-check" : "bi-shield-exclamation");
+
+    // Конвертуємо час із бази (UTC) на київський час
+    TimeZoneInfo ukraineTimeZone;
+    try
+    {
+        ukraineTimeZone = TimeZoneInfo.FindSystemTimeZoneById("FLE Standard Time");
+    }
+    catch
+    {
+        ukraineTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Kyiv");
+    }
+    DateTime localCheckTime = TimeZoneInfo.ConvertTimeFromUtc(Model.CheckDate, ukraineTimeZone);
 }
 
 <div class="container mt-4 mb-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-2"></i>Назад до Дашборду
+        <!-- Кнопка повернення -->
+        <a asp-controller="Home" asp-action="History" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Назад до Історії
         </a>
     </div>
 
     <div class="row">
+        <!-- ЛІВА КОЛОНКА (Контент, Слова, Підсумок) -->
         <div class="col-lg-8 mb-4">
-            <div class="card border-dark rounded-0 shadow-none h-100">
+            
+            <!-- Блок сирого тексту -->
+            <div class="card border-dark rounded-0 shadow-none mb-4">
                 <div class="card-header border-dark bg-light rounded-0">
                     <h5 class="mb-0 fw-bold"><i class="bi bi-file-text me-2"></i>Проаналізований контент</h5>
                 </div>
-                <div class="card-body">
-                    <p style="white-space: pre-wrap; word-break: break-word;">@Model.RawContent</p>
+                <div class="card-body custom-scrollbar" style="max-height: 400px; overflow-y: auto;">
+                    <p style="white-space: pre-wrap; word-break: break-word;" class="mb-0">@Model.RawContent</p>
                 </div>
             </div>
+
+            <!-- БЛОК 1: Ключові слова -->
+            @if (Model.KeyTriggers != null && Model.KeyTriggers.Any())
+            {
+                <div class="mt-4 mb-3">
+                    <h6 class="fw-bold text-muted mb-2">
+                        Слова, що вплинули на рішення:
+                    </h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var trigger in Model.KeyTriggers)
+                        {
+                            <span class="badge bg-light text-dark border px-3 py-2" style="border-radius: 20px; font-size: 0.9rem;">
+                                @trigger.Word
+                            </span>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- БЛОК 2: Короткий зміст -->
+            @if (!string.IsNullOrEmpty(Model.Summary))
+            {
+                <div class="mt-4 p-4 bg-white border shadow-sm text-start mb-4" style="border-radius: 12px; border-left: 5px solid #0d6efd !important;">
+                    <h5 class="fw-bold text-dark mb-3">
+                        <i class="bi bi-card-text text-primary me-2"></i>Короткий зміст:
+                    </h5>
+                    <p class="mb-0 text-muted" style="font-size: 1rem; line-height: 1.6; white-space: pre-line;">
+                        @Model.Summary
+                    </p>
+                </div>
+            }
+            
         </div>
 
+        <!-- ПРАВА КОЛОНКА (Вердикт та Джерела) -->
         <div class="col-lg-4 mb-4">
-            <div class="border border-dark d-flex flex-column align-items-center justify-content-center bg-white h-100 p-4" style="min-height: 400px;">
+            <!-- Спільний контейнер sticky-top для фіксації при прокрутці -->
+            <div class="sticky-top" style="top: 20px;">
                 
-                <i class="bi @iconClass @colorClass mb-3" style="font-size: 5rem;"></i>
-                <h2 class="@colorClass fw-bold text-uppercase">@Model.Verdict</h2>
-                <h5 class="text-muted mt-2 mb-5">Впевненість: @(Math.Round(Model.ConfidenceScore * 100))%</h5>
+                <!-- БЛОК РІШЕННЯ МОДЕЛІ -->
+                <div class="border border-dark d-flex flex-column align-items-center justify-content-center bg-white p-4 mb-4" style="min-height: 400px;">
+                    <i class="bi @iconClass @colorClass mb-3" style="font-size: 5rem;"></i>
+                    <h2 class="@colorClass fw-bold text-uppercase">@Model.Verdict</h2>
+                    
+                    <h5 class="text-muted mt-2 mb-5">Впевненість: @(Math.Round(Model.ConfidenceScore))%</h5>
 
-                <div class="w-100 pt-4">
-                    <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted small">Дата перевірки:</span>
-                        <span class="fw-bold small">@Model.CheckDate.ToString("dd.MM.yyyy HH:mm:ss")</span>
+                    <div class="w-100 pt-4 border-top">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Дата перевірки:</span>
+                            <span class="fw-bold small">@localCheckTime.ToString("dd.MM.yyyy HH:mm:ss")</span>
+                        </div>
                     </div>
                 </div>
 
+                <!-- БЛОК 3: Знайдені джерела (ПЕРЕНЕСЕНО СЮДИ) -->
+                @if (Model.ExternalSources != null && Model.ExternalSources.Any())
+                {
+                    var sourcesList = Model.ExternalSources.ToList();
+                    
+                    <div class="mt-2">
+                        <h6 class="fw-bold mb-3">Схоже у мережі серед довірених джерел:</h6>
+                        <div class="border bg-white p-3 shadow-sm" style="border-radius: 12px;">
+                            <ol class="ps-3 mb-2">
+                                @for (int i = 0; i < sourcesList.Count; i++)
+                                {
+                                    var displayClass = i >= 3 ? "d-none extra-link" : "";
+                                    
+                                    <li class="mb-2 small @displayClass">
+                                        <a href="@sourcesList[i].Url" target="_blank" class="text-primary text-decoration-none d-block text-truncate">
+                                            @sourcesList[i].Title
+                                        </a>
+                                    </li>
+                                }
+                            </ol>
+                            
+                            @if (sourcesList.Count > 3)
+                            {
+                                <button type="button" id="toggle-links-btn" class="btn btn-link text-muted small p-0 text-decoration-none shadow-none" onclick="toggleLinks()">
+                                    See more...
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+                
             </div>
         </div>
     </div>
 </div>
+
+<!-- Скрипт для роботи кнопки "See more..." -->
+<script>
+    function toggleLinks() {
+        const extraLinks = document.querySelectorAll('.extra-link');
+        const btn = document.getElementById('toggle-links-btn');
+        
+        if (!extraLinks || extraLinks.length === 0) return;
+        
+        let isHidden = extraLinks[0].classList.contains('d-none');
+        
+        if (isHidden) {
+            extraLinks.forEach(link => link.classList.remove('d-none'));
+            btn.innerText = "Згорнути";
+        } else {
+            extraLinks.forEach(link => link.classList.add('d-none'));
+            btn.innerText = "See more...";
+        }
+    }
+</script>
