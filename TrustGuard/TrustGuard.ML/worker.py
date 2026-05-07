@@ -3,16 +3,16 @@ import re
 import pickle
 import time
 from stop_words import get_stop_words
-from ddgs import DDGS
+from duckduckgo_search import DDGS
 from urllib.parse import urlparse
 import nltk
 from nltk.tokenize import sent_tokenize, word_tokenize
 import heapq
 
 app = Celery(
-    'ml_tasks',
-    broker='redis://localhost:6379/0',
-    backend='redis://localhost:6379/0'
+    'ml_tasks', 
+    broker='redis://redis:6379/0', 
+    backend='redis://redis:6379/0'
 )
 
 ENGLISH_STOP_WORDS = set(get_stop_words('en'))
