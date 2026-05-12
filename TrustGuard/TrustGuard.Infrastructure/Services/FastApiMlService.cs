@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Json;
 using TrustGuard.Application.Interfaces;
+using Microsoft.Extensions.Configuration; 
 
 namespace TrustGuard.Infrastructure.Services
 {
@@ -8,10 +9,11 @@ namespace TrustGuard.Infrastructure.Services
         private readonly HttpClient _httpClient;
         private readonly IDomainService _domainService;
 
-        public FastApiMlService(HttpClient httpClient, IDomainService domainService)
+        public FastApiMlService(HttpClient httpClient, IDomainService domainService, IConfiguration configuration)
         {
             _httpClient = httpClient;
-            _httpClient.BaseAddress = new Uri("http://127.0.0.1:8000/");
+            var mlApiUrl = configuration["MLApiUrl"] ?? "http://127.0.0.1:8000/";
+            _httpClient.BaseAddress = new Uri(mlApiUrl);
             _domainService = domainService;
         }
 
