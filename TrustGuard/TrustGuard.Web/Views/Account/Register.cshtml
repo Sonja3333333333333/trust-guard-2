@@ -4,8 +4,8 @@
     <div class="row justify-content-center">
         <div class="col-md-5">
             <div class="card shadow border-0">
-                <div class="card-header bg-dark text-white text-center">
-                    <h4 class="mb-0">Створення акаунту</h4>
+                <div class="card-header text-dark text-center" style="background-color: #8ab4f8;">
+                    <h4 class="mb-0 fw-bold">Створення акаунту</h4>
                 </div>
                 <div class="card-body p-4">
                     <form asp-action="Register" method="post" id="regForm">
@@ -33,7 +33,13 @@
                             <input asp-for="ConfirmPassword" type="password" class="form-control" />
                         </div>
 
-                        <button type="submit" id="submitBtn" class="btn btn-dark w-100">Зареєструватися</button>
+                        <button type="submit" id="submitBtn" class="btn w-100 text-dark fw-bold mb-3" style="background-color: #8ab4f8;">Зареєструватися</button>
+
+                        <!-- НОВИЙ БЛОК: Посилання на сторінку входу -->
+                        <div class="text-center">
+                            <span class="small text-muted">Вже маєте акаунт?</span>
+                            <a asp-action="Login" class="text-decoration-none small fw-bold">Увійти</a>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -42,22 +48,40 @@
 </div>
 
 @section Scripts {
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
     <script>
+
         $(document).ready(function () {
+
         // Тільки перевірка пошти
+
         $('#emailField').on('input', function () {
+
         const email = $(this).val();
+
         const regex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
 
+
+
         if (email.length > 0 && !regex.test(email)) {
+
         $('#emailError').text('Формат пошти невірний');
+
         $(this).addClass('is-invalid');
+
         } else {
+
         $('#emailError').text('');
+
         $(this).removeClass('is-invalid');
+
         }
+
         });
+
         });
+
     </script>
 }
