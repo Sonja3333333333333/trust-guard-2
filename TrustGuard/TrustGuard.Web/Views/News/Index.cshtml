@@ -147,36 +147,52 @@
                 </div>
 
             </div>
-
-            <!-- Оновлений блок із посиланнями -->
-            @if (ViewBag.OsintLinks != null && ((List<TrustGuard.Application.Interfaces.SourceLink>)ViewBag.OsintLinks).Any())
+            @if (ViewBag.Verdict != null)
             {
-                var links = (List<TrustGuard.Application.Interfaces.SourceLink>)ViewBag.OsintLinks;
-                
-                <div class="mt-2">
-                    <!-- Змінено заголовок тут -->
+                <div class="mt-4 text-start">
                     <h6 class="fw-bold mb-3">Схоже у мережі серед довірених джерел:</h6>
-                    <div class="border bg-white p-3 shadow-sm" style="border-radius: 12px;">
-                        <ol class="ps-3 mb-2">
-                            @for (int i = 0; i < links.Count; i++)
-                            {
-                                var displayClass = i >= 3 ? "d-none extra-link" : "";
-                                
-                                <li class="mb-2 small @displayClass">
-                                    <a href="@links[i].Url" target="_blank" class="text-primary text-decoration-none d-block text-truncate">
-                                        @links[i].Name
-                                    </a>
-                                </li>
-                            }
-                        </ol>
+        
+                    @if (ViewBag.OsintLinks != null && ((List<TrustGuard.Application.Interfaces.SourceLink>)ViewBag.OsintLinks).Any())
+                    {
+                        var links = (List<TrustGuard.Application.Interfaces.SourceLink>)ViewBag.OsintLinks;
+            
+                        <div class="border bg-white p-3 shadow-sm" style="border-radius: 12px;">
+                            <ol class="ps-3 mb-2">
+                                @for (int i = 0; i < links.Count; i++)
+                                {
+                                    var displayClass = i >= 3 ? "d-none extra-link" : "";
                         
-                        @if (links.Count > 3)
-                        {
-                            <button type="button" id="toggle-links-btn" class="btn btn-link text-muted small p-0 text-decoration-none shadow-none" onclick="toggleLinks()">
-                                See more...
-                            </button>
-                        }
-                    </div>
+                                    <li class="mb-2 small @displayClass">
+                                        <a href="@links[i].Url" target="_blank" class="text-primary text-decoration-none d-block text-truncate">
+                                            @links[i].Name
+                                        </a>
+                                    </li>
+                                }
+                            </ol>
+                
+                            @if (links.Count > 3)
+                            {
+                                <button type="button" id="toggle-links-btn" class="btn btn-link text-muted small p-0 text-decoration-none shadow-none" onclick="toggleLinks()">
+                                    See more...
+                                </button>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning text-center mb-0 shadow-sm" role="alert" style="border-radius: 12px;">
+                            <i class="bi bi-exclamation-triangle me-2 text-warning fs-5"></i>
+                            <br />
+                            @if (ViewBag.OsintMessage != null)
+                            {
+                                <span class="small fw-bold">@ViewBag.OsintMessage</span>
+                            }
+                            else
+                            {
+                                <span class="small fw-bold">Авторитетні джерела не знайдені.</span>
+                            }
+                        </div>
+                    }
                 </div>
             }
         </div>

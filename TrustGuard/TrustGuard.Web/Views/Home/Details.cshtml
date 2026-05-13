@@ -96,19 +96,19 @@
                     </div>
                 </div>
 
-                <!-- БЛОК 3: Знайдені джерела (ПЕРЕНЕСЕНО СЮДИ) -->
-                @if (Model.ExternalSources != null && Model.ExternalSources.Any())
-                {
-                    var sourcesList = Model.ExternalSources.ToList();
-                    
-                    <div class="mt-2">
-                        <h6 class="fw-bold mb-3">Схоже у мережі серед довірених джерел:</h6>
+                <div class="mt-4">
+                    <h6 class="fw-bold mb-3">Схоже у мережі серед довірених джерел:</h6>
+    
+                    @if (Model.ExternalSources != null && Model.ExternalSources.Any())
+                    {
+                        var sourcesList = Model.ExternalSources.ToList();
+        
                         <div class="border bg-white p-3 shadow-sm" style="border-radius: 12px;">
                             <ol class="ps-3 mb-2">
                                 @for (int i = 0; i < sourcesList.Count; i++)
                                 {
                                     var displayClass = i >= 3 ? "d-none extra-link" : "";
-                                    
+                    
                                     <li class="mb-2 small @displayClass">
                                         <a href="@sourcesList[i].Url" target="_blank" class="text-primary text-decoration-none d-block text-truncate">
                                             @sourcesList[i].Title
@@ -116,7 +116,7 @@
                                     </li>
                                 }
                             </ol>
-                            
+            
                             @if (sourcesList.Count > 3)
                             {
                                 <button type="button" id="toggle-links-btn" class="btn btn-link text-muted small p-0 text-decoration-none shadow-none" onclick="toggleLinks()">
@@ -124,8 +124,16 @@
                                 </button>
                             }
                         </div>
-                    </div>
-                }
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning text-center mb-0 shadow-sm" role="alert" style="border-radius: 12px;">
+                            <i class="bi bi-exclamation-triangle me-2 text-warning fs-5"></i>
+                            <br />
+                            <span class="small fw-bold">Для цієї новини не знайдено підтверджень у надійних джерелах.</span>
+                        </div>
+                    }
+                </div>
                 
             </div>
         </div>

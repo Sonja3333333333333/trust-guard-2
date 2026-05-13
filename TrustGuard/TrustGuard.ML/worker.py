@@ -46,8 +46,6 @@ def clean_text(raw_text: str) -> str:
     return " ".join(cleaned_words)
 
 
-# ---------------- OSINT SEARCH ---------------- #
-
 def is_trusted(url: str, trusted_domains: list) -> bool:
     try:
         domain = urlparse(url).netloc.lower()
@@ -84,7 +82,6 @@ def search_trusted_sources(query: str, trusted_domains: list):
         }
 
     trusted_links = []
-    fallback_links = []
 
     for item in raw_results:
         url = item.get("href", "")
@@ -95,9 +92,7 @@ def search_trusted_sources(query: str, trusted_domains: list):
 
         link_obj = {"name": title, "url": url}
 
-        if len(fallback_links) < 3:
-            fallback_links.append(link_obj)
-
+        # Додаємо лише якщо джерело є в списку довірених
         if is_trusted(url, trusted_domains):
             trusted_links.append(link_obj)
 
@@ -115,12 +110,11 @@ def search_trusted_sources(query: str, trusted_domains: list):
     return {
         "status": "Unverified",
         "trustedSourcesFound": 0,
-        "links": fallback_links,
+        "links": [], 
         "message": "Авторитетні джерела не знайдені."
     }
     
     
-# ---------------- SUMMARY ---------------- #
 def clean_extracted_sentence(sentence: str) -> str:
     cleaned = re.sub(r'^(Earlier|Also|However|Furthermore|In addition|Meanwhile|Separately|Additionally),\s*', '', sentence, flags=re.IGNORECASE)
  
@@ -178,7 +172,6 @@ def generate_summary(text: str, num_sentences: int = 3) -> str:
         fallback_sentences = sent_tokenize(text)[:num_sentences]
         return "\n".join([f"• {sent.strip()}" for sent in fallback_sentences])
 
-# ---------------- MAIN TASK ---------------- #
 @app.task
 def predict_news(text: str, trusted_domains: list):
     print(f"ВОРКЕР: Отримав новий запит ({len(text)} симв.)")
@@ -189,7 +182,7 @@ def predict_news(text: str, trusted_domains: list):
                 "verdict": "Error",
                 "confidenceScore": 0,
                 "message": "Моделі не завантажені!",
-                "summary": "" # Додаємо сюди пустий рядок для безпеки
+                "summary": "" 
             },
             "osintAnalysis": {}
         }
@@ -207,7 +200,6 @@ def predict_news(text: str, trusted_domains: list):
         "FAKE": "Fake", "REAL": "Real"
     }
     
-    # 1. ГЕНЕРУЄМО ТА ЗБЕРІГАЄМО SUMMARY
     text_summary = generate_summary(text)
     print("ВОРКЕР: Summary успішно згенеровано!") 
     
@@ -230,7 +222,6 @@ def predict_news(text: str, trusted_domains: list):
     osint_result = search_trusted_sources(text, trusted_domains)
     print(f"ВОРКЕР: OSINT Status -> {osint_result['status']}")
 
-    # 2. ДОДАЄМО SUMMARY У ФІНАЛЬНУ ВІДПОВІДЬ
     return {
         "mlAnalysis": {
             "verdict": ml_verdict,
