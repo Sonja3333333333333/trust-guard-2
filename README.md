@@ -50,7 +50,7 @@ git clone [https://github.com/Sonja3333333333333/trust-guard-2.git](https://gith
 ```
 
 ### 3. Завантаження файлів ШІ
-1. Скачайте **3 файли** за посиланням: [Google Диск](https://drive.google.com/drive/folders/1e2adu1veHgqI1LP0cyolzg4tvNs0Gfr3?usp=drive_link)
+1. Скачайте **3 файли** за посиланням: https://drive.google.com/drive/folders/1e2adu1veHgqI1LP0cyolzg4tvNs0Gfr3?usp=drive_link
 2. Перемістіть усі 3 скачані файли строго у папку сервісу ML:
 
 ```bash
