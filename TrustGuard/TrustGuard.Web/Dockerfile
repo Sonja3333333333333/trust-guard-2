@@ -1,14 +1,17 @@
-# See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
-
-# This stage is used when running from VS in fast mode (Default for Debug configuration)
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
-USER $APP_UID
+USER root
+
+# 1. Ставимо Tesseract і системні ліби
+RUN apt-get update && apt-get install -y \
+    tesseract-ocr \
+    libtesseract-dev \
+    libleptonica-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
-
-# This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
@@ -21,13 +24,25 @@ COPY . .
 WORKDIR "/src/TrustGuard.Web"
 RUN dotnet build "./TrustGuard.Web.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
-# This stage is used to publish the service project to be copied to the final stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "./TrustGuard.Web.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
-# This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+
+USER root
+# 2. Видаляємо старий шлак від NuGet
+RUN rm -rf runtimes/linux-x64/native/*
+
+# 3. СТВОРЮЄМО ПАПКУ x64 І КЛАДЕМО МАГІЧНІ ЛІНКИ
+RUN mkdir -p /app/x64 \
+    && ln -s /usr/lib/x86_64-linux-gnu/libleptonica.so /app/x64/libleptonica-1.82.0.so \
+    && ln -s /usr/lib/x86_64-linux-gnu/libtesseract.so /app/x64/libtesseract50.so \
+    && ln -s /usr/lib/x86_64-linux-gnu/libtesseract.so /app/x64/libtesseract53.so \
+    && ln -s /usr/lib/x86_64-linux-gnu/libdl.so.2 /app/libdl.so
+
+COPY TrustGuard.Web/tessdata ./tessdata
+
 ENTRYPOINT ["dotnet", "TrustGuard.Web.dll"]
