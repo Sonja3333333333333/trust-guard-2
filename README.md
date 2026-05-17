@@ -82,9 +82,9 @@ docker compose up -d --build
 Після того, як усі контейнери запустяться, переходьте за адресами:
 * **Головний сайт (C# Web):** 
 ```bash
-[http://localhost:8080](http://localhost:8080)
+http://localhost:8080
 ```
 * **Аналітика API (FastAPI Swagger):** 
 ```bash
-[http://localhost:8000/docs](http://localhost:8000/docs)
+http://localhost:8000/docs
 ```
