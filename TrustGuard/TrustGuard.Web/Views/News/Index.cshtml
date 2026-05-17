@@ -1,4 +1,5 @@
-﻿@{
+﻿@model TrustGuard.Web.Models.NewsCheckResultViewModel
+@{
     ViewData["Title"] = "News Check";
 }
 
@@ -6,7 +7,7 @@
     <div class="col-lg-8">
         
         <form id="analyzeForm" asp-controller="News" asp-action="Analyze" method="post" enctype="multipart/form-data">
-    
+        
             <ul class="nav nav-tabs" id="checkTypeTabs" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active text-dark" id="text-tab" data-bs-toggle="tab" data-bs-target="#text-pane" type="button" role="tab">Текст</button>
@@ -25,7 +26,7 @@
             <div class="tab-content border border-top-0 p-0 mb-4 bg-white" id="myTabContent">
         
                 <div class="tab-pane fade show active" id="text-pane" role="tabpanel">
-                    <textarea name="textContent" class="form-control border-0 p-3 shadow-none" rows="12" placeholder="Вставте текст новини..."></textarea>
+                    <textarea name="textContent" class="form-control border-0 p-3 shadow-none" rows="12" placeholder="Вставте text новини..."></textarea>
                 </div>
         
                 <div class="tab-pane fade p-4" id="url-pane" role="tabpanel" style="min-height: 300px;">
@@ -48,17 +49,17 @@
             <button type="submit" class="btn btn-outline-primary px-5 py-2 fw-bold" style="border-radius: 8px;">
                 Аналізувати
             </button>
-    
+        
         </form>
 
-        @if (ViewBag.KeyTriggers != null && ViewBag.KeyTriggers.Count > 0)
+        @if (Model.KeyTriggers != null && Model.KeyTriggers.Count > 0)
         {
             <div class="mt-4 mb-3">
                 <h6 class="fw-bold text-muted mb-2">
                     Слова, що вплинули на рішення:
                 </h6>
                 <div class="d-flex flex-wrap gap-2">
-                    @foreach (var word in ViewBag.KeyTriggers)
+                    @foreach (var word in Model.KeyTriggers)
                     {
                         <span class="badge bg-light text-dark border px-3 py-2" style="border-radius: 20px; font-size: 0.9rem;">
                             @word
@@ -68,14 +69,14 @@
             </div>
         }
 
-        @if (!string.IsNullOrEmpty(ViewBag.Summary))
+        @if (!string.IsNullOrEmpty(Model.Summary))
         {
             <div class="mt-4 p-4 bg-white border shadow-sm text-start" style="border-radius: 12px; border-left: 5px solid #0d6efd !important;">
                 <h5 class="fw-bold text-dark mb-3">
                     <i class="bi bi-card-text text-primary me-2"></i>Короткий зміст:
                 </h5>
                 <p class="mb-0 text-muted" style="font-size: 1rem; line-height: 1.6; white-space: pre-line;">
-                    @ViewBag.Summary
+                    @Model.Summary
                 </p>
             </div>
         }
@@ -88,33 +89,31 @@
             <div class="border bg-white p-4 text-center mb-4 shadow-sm" style="border-radius: 12px; min-height: 450px;">
     
                 <div id="panel-content" class="h-100">
-                    @if (ViewBag.Verdict != null)
+                    @if (Model.Verdict != null)
                     {
-                        <!-- Блок ML Аналізу -->
                         <p class="text-muted small text-uppercase fw-bold mb-4">ML Аналіз Тексту</p>
                         <div class="d-flex justify-content-center mb-4">
-                            <div class="rounded-circle d-flex flex-column align-items-center justify-content-center border border-3 @(ViewBag.Verdict == "Fake" ? "border-danger text-danger" : "border-success text-success")"
+                            <div class="rounded-circle d-flex flex-column align-items-center justify-content-center border border-3 @(Model.Verdict == "Fake" ? "border-danger text-danger" : "border-success text-success")"
                                  style="width: 130px; height: 130px;">
-                                <span class="fw-bold h4 mb-0">@ViewBag.Verdict.ToString().ToUpper()</span>
-                                <span class="small">@Math.Round(Convert.ToDouble(ViewBag.Confidence))%</span>
+                                <span class="fw-bold h4 mb-0">@Model.Verdict.ToUpper()</span>
+                                <span class="small">@Math.Round(Model.Confidence)%</span>
                             </div>
                         </div>
 
-                        <!-- НОВИЙ БЛОК: Аналіз джерела (Показується ТІЛЬКИ якщо перевіряли URL) -->
-                        @if (ViewBag.DomainScore != null)
+                        @if (Model.DomainScore != null)
                         {
                             <p class="text-muted small text-uppercase fw-bold mb-3 mt-4">Надійність джерела</p>
                             <div class="d-flex flex-column align-items-center mb-4">
                                 <div class="rounded-circle d-flex flex-column align-items-center justify-content-center border border-3 border-primary text-primary mb-3"
                                      style="width: 130px; height: 130px;">
-                                    <span class="fw-bold h2 mb-0">@ViewBag.DomainScore</span>
+                                    <span class="fw-bold h2 mb-0">@Model.DomainScore</span>
                                     <span class="small">зі 100</span>
                                 </div>
                                 
-                                @if (ViewBag.DomainFactors != null)
+                                @if (Model.DomainFactors != null)
                                 {
                                     <ul class="list-unstyled text-start text-muted small" style="max-width: 250px;">
-                                        @foreach (var factor in (List<string>)ViewBag.DomainFactors)
+                                        @foreach (var factor in Model.DomainFactors)
                                         {
                                             <li class="mb-2">@factor</li>
                                         }
@@ -123,11 +122,11 @@
                             </div>
                         }
                     }
-                    else if (ViewBag.Error != null)
+                    else if (Model.Error != null)
                     {
                         <div class="h-100 d-flex flex-column align-items-center justify-content-center">
                             <i class="bi bi-exclamation-triangle text-danger mb-3" style="font-size: 3rem;"></i>
-                            <p class="text-danger text-center px-3">@ViewBag.Error</p>
+                            <p class="text-danger text-center px-3">@Model.Error</p>
                         </div>
                     }
                     else
@@ -139,7 +138,6 @@
                     }
                 </div>
 
-                <!-- Мінімалістичний лоадер -->
                 <div id="loading-spinner" class="d-none h-100 flex-column align-items-center justify-content-center bg-white" style="border-radius: 12px; min-height: 450px;">
                     <div class="w-75 bg-light" style="height: 3px; border-radius: 2px; overflow: hidden;">
                         <div id="loading-progress-bar" class="bg-primary h-100" style="width: 0%; transition: width 0.1s linear;"></div>
@@ -147,14 +145,15 @@
                 </div>
 
             </div>
-            @if (ViewBag.Verdict != null)
+
+            @if (Model.Verdict != null)
             {
                 <div class="mt-4 text-start">
                     <h6 class="fw-bold mb-3">Схоже у мережі серед довірених джерел:</h6>
         
-                    @if (ViewBag.OsintLinks != null && ((List<TrustGuard.Application.Interfaces.SourceLink>)ViewBag.OsintLinks).Any())
+                    @if (Model.OsintLinks != null && Model.OsintLinks.Any())
                     {
-                        var links = (List<TrustGuard.Application.Interfaces.SourceLink>)ViewBag.OsintLinks;
+                        var links = Model.OsintLinks;
             
                         <div class="border bg-white p-3 shadow-sm" style="border-radius: 12px;">
                             <ol class="ps-3 mb-2">
@@ -183,9 +182,9 @@
                         <div class="alert alert-warning text-center mb-0 shadow-sm" role="alert" style="border-radius: 12px;">
                             <i class="bi bi-exclamation-triangle me-2 text-warning fs-5"></i>
                             <br />
-                            @if (ViewBag.OsintMessage != null)
+                            @if (Model.MlMessage != null)
                             {
-                                <span class="small fw-bold">@ViewBag.OsintMessage</span>
+                                <span class="small fw-bold">@Model.MlMessage</span>
                             }
                             else
                             {
@@ -247,9 +246,13 @@
                     currentProgress += 1;
                     progressBar.style.width = currentProgress + '%';
                 } else {
-                    clearInterval(progressInterval);
+                    rememberToStopInterval(progressInterval);
                 }
             }, 80);
+
+            function rememberToStopInterval(interval) {
+                clearInterval(interval);
+            }
         });
     });
 </script>

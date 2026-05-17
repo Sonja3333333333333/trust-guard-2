@@ -3,6 +3,8 @@ using System.Security.Claims;
 using System.Text.Json;
 using TrustGuard.Application.Interfaces;
 using TrustGuard.Domain.Entities;
+using TrustGuard.Web.Extensions;
+using TrustGuard.Web.Models;
 
 namespace TrustGuard.Web.Controllers
 {
@@ -31,7 +33,8 @@ namespace TrustGuard.Web.Controllers
         [HttpGet]
         public IActionResult Index()
         {
-            return View();
+            var model = TempData.Get<NewsCheckResultViewModel>("AnalysisResult") ?? new NewsCheckResultViewModel();
+            return View(model);
         }
 
         [HttpPost]
@@ -40,6 +43,8 @@ namespace TrustGuard.Web.Controllers
             string textToAnalyze = "";
             ContentType detectedType = ContentType.Text;
             MlAnalysisResponse? result = null;
+
+            var viewModel = new NewsCheckResultViewModel();
 
             try
             {
@@ -55,62 +60,61 @@ namespace TrustGuard.Web.Controllers
 
                     if (string.IsNullOrWhiteSpace(textToAnalyze) || textToAnalyze.StartsWith("Не вдалося"))
                     {
-                        ViewBag.Error = "Не вдалося витягнути текст за цим посиланням. Можливо, сайт блокує парсинг або там немає статті.";
-                        return View("Index");
+                        viewModel.Error = "Не вдалося витягнути текст за цим посиланням. Можливо, сайт блокує парсинг або там немає статті.";
+                        TempData.Put("AnalysisResult", viewModel);
+                        return RedirectToAction(nameof(Index));
                     }
 
                     var domainRecord = await _domainScoringService.ScoreDomainAsync(urlContent);
-                    ViewBag.DomainScore = domainRecord.TrustScore;
+                    viewModel.DomainScore = domainRecord.TrustScore;
                     if (!string.IsNullOrEmpty(domainRecord.FactorsJson))
                     {
-                        ViewBag.DomainFactors = JsonSerializer.Deserialize<List<string>>(domainRecord.FactorsJson);
+                        viewModel.DomainFactors = JsonSerializer.Deserialize<List<string>>(domainRecord.FactorsJson);
                     }
                 }
                 else if (documentFile != null && documentFile.Length > 0)
                 {
                     detectedType = ContentType.Document;
-
                     using var stream = documentFile.OpenReadStream();
                     textToAnalyze = await _fileParserService.ExtractTextAsync(stream, documentFile.FileName);
 
                     if (string.IsNullOrWhiteSpace(textToAnalyze))
                     {
-                        ViewBag.Error = "Не вдалося витягнути текст із файлу. Можливо, він порожній або це відскановані картинки.";
-                        return View("Index");
+                        viewModel.Error = "Не вдалося витягнути текст із файлу. Можливо, він порожній або це відскановані картинки.";
+                        TempData.Put("AnalysisResult", viewModel);
+                        return RedirectToAction(nameof(Index));
                     }
                 }
                 else if (imageFile != null && imageFile.Length > 0)
                 {
                     detectedType = ContentType.Document;
-
                     using var stream = imageFile.OpenReadStream();
                     textToAnalyze = await _fileParserService.ExtractTextAsync(stream, imageFile.FileName);
 
                     if (string.IsNullOrWhiteSpace(textToAnalyze))
                     {
-                        ViewBag.Error = "Не вдалося розпізнати текст на зображенні. Можливо, текст занадто розмитий.";
-                        return View("Index");
+                        viewModel.Error = "Не вдалося розпізнати текст на зображенні. Можливо, текст занадто розмитий.";
+                        TempData.Put("AnalysisResult", viewModel);
+                        return RedirectToAction(nameof(Index));
                     }
                 }
                 else
                 {
-                    ViewBag.Error = "Будь ласка, введіть текст, URL або завантажте файл.";
-                    return View("Index");
+                    viewModel.Error = "Будь ласка, введіть текст, URL або завантажте файл.";
+                    TempData.Put("AnalysisResult", viewModel);
+                    return RedirectToAction(nameof(Index));
                 }
 
                 result = await _mlService.AnalyzeContentAsync(textToAnalyze, detectedType.ToString());
 
                 if (result != null && result.MlAnalysis != null)
                 {
-                    ViewBag.Verdict = result.MlAnalysis.Verdict;
-                    ViewBag.Confidence = result.MlAnalysis.ConfidenceScore;
-                    ViewBag.MlMessage = result.MlAnalysis.Message;
-
-                    ViewBag.Summary = result.MlAnalysis.Summary;
-
-                    ViewBag.OsintLinks = result.OsintAnalysis?.Links;
-
-                    ViewBag.KeyTriggers = result.MlAnalysis.KeyTriggers;
+                    viewModel.Verdict = result.MlAnalysis.Verdict;
+                    viewModel.Confidence = result.MlAnalysis.ConfidenceScore;
+                    viewModel.MlMessage = result.MlAnalysis.Message;
+                    viewModel.Summary = result.MlAnalysis.Summary;
+                    viewModel.OsintLinks = result.OsintAnalysis?.Links;
+                    viewModel.KeyTriggers = result.MlAnalysis.KeyTriggers;
 
                     var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                     if (!string.IsNullOrEmpty(userId))
@@ -125,24 +129,26 @@ namespace TrustGuard.Web.Controllers
                             result.MlAnalysis.Summary,
                             result.MlAnalysis.KeyTriggers);
 
-                        ViewBag.Message = $"Результат успішно збережено в історію! (Формат: {detectedType})";
+                        viewModel.Message = $"Результат успішно збережено в історію! (Формат: {detectedType})";
                     }
                     else
                     {
-                        ViewBag.Message = $"Результат не збережено. Увійдіть у систему. (Формат: {detectedType})";
+                        viewModel.Message = $"Результат не збережено. Увійдіть у систему. (Формат: {detectedType})";
                     }
                 }
                 else
                 {
-                    ViewBag.Error = "Помилка: Python-сервер повернув порожню відповідь.";
+                    viewModel.Error = "Помилка: Python-сервер повернув порожню відповідь.";
                 }
             }
             catch (Exception ex)
             {
-                ViewBag.Error = $"Сталася помилка: {ex.Message}";
+                viewModel.Error = $"Сталася помилка: {ex.Message}";
             }
 
-            return View("Index");
+            TempData.Put("AnalysisResult", viewModel);
+            
+            return RedirectToAction(nameof(Index));
         }
     }
 }
