@@ -22,7 +22,6 @@ namespace TrustGuard.Web.Controllers
             _emailSender = emailSender;
         }
 
-        // --- РОЗУМНИЙ РОУТЕР (Перенаправляє по куках) ---
         [HttpGet]
         public IActionResult Entry()
         {
@@ -78,7 +77,6 @@ namespace TrustGuard.Web.Controllers
                     {
                         await _emailSender.SendEmailAsync(model.Email, "Підтвердження реєстрації TrustGuard", emailBody);
 
-                        // ДОДАЄМО КУКУ НА 1 РІК
                         Response.Cookies.Append("HasAccount", "true", new CookieOptions
                         {
                             Expires = DateTimeOffset.UtcNow.AddYears(1),
@@ -142,7 +140,6 @@ namespace TrustGuard.Web.Controllers
                     var result = await _signInManager.PasswordSignInAsync(user.UserName!, model.Password, model.RememberMe, false);
                     if (result.Succeeded)
                     {
-                        // ОНОВЛЮЄМО КУКУ ПРИ ВХОДІ
                         Response.Cookies.Append("HasAccount", "true", new CookieOptions
                         {
                             Expires = DateTimeOffset.UtcNow.AddYears(1),

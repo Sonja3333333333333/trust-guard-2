@@ -14,7 +14,10 @@ app = Celery(
     broker='redis://redis:6379/0', 
     backend='redis://redis:6379/0'
 )
-
+# тести
+# app = Celery('ml_tasks', 
+#              broker='redis://localhost:6379/0', 
+#              backend='redis://localhost:6379/0')
 ENGLISH_STOP_WORDS = set(get_stop_words('en'))
 
 print("ВОРКЕР: Завантажую математичні моделі...")
