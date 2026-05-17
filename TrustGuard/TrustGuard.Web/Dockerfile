@@ -36,7 +36,7 @@ USER root
 # 2. Видаляємо старий шлак від NuGet
 RUN rm -rf runtimes/linux-x64/native/*
 
-# 3. СТВОРЮЄМО ПАПКУ x64 І КЛАДЕМО МАГІЧНІ ЛІНКИ
+# 3. СТВОРЮЄМО ПАПКУ x64
 RUN mkdir -p /app/x64 \
     && ln -s /usr/lib/x86_64-linux-gnu/libleptonica.so /app/x64/libleptonica-1.82.0.so \
     && ln -s /usr/lib/x86_64-linux-gnu/libtesseract.so /app/x64/libtesseract50.so \
