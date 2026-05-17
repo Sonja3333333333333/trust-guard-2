@@ -80,10 +80,11 @@ docker compose up -d --build
 
 ### 6. Локальні адреси для перевірки
 Після того, як усі контейнери запустяться, переходьте за адресами:
+* **Головний сайт (C# Web):** 
 ```bash
-* **Головний сайт (C# Web):** [http://localhost:8080](http://localhost:8080)
+[http://localhost:8080](http://localhost:8080)
 ```
+* **Аналітика API (FastAPI Swagger):** 
 ```bash
-* **Аналітика API (FastAPI Swagger):** [http://localhost:8000/docs](http://localhost:8000/docs)
-
-й
+[http://localhost:8000/docs](http://localhost:8000/docs)
+```
