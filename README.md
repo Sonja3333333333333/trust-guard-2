@@ -77,7 +77,6 @@ TrustGuard.Web/appsettings.json
 Пошта: vujkevicanton@gmail.com
 
 Пароль від акаунту: 123123123qweqweqwe
-
 ---
 
 ### 5. Збірка та запуск
