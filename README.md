@@ -84,3 +84,4 @@ docker compose up -d --build
 * **Головний сайт (C# Web):** [http://localhost:8080](http://localhost:8080)
 * **Аналітика API (FastAPI Swagger):** [http://localhost:8000/docs](http://localhost:8000/docs)
 
+й
