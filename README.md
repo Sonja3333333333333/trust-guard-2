@@ -52,5 +52,11 @@ git clone <https://github.com/Sonja3333333333333/trust-guard-2.git>
 
 5. Збірка та запуск
 Відкрийте термінал у корені проєкту (там, де лежить docker-compose.yml) та виконайте:
+```bash
 docker compose up -d --build
-Сайт: http://localhost:8080
+```
+Сайт: 
+```bash
+http://localhost:8080
+```
+
